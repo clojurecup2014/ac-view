@@ -9,6 +9,7 @@
             [ac-view.asset :as asset]
             [ac-view.fader :as fader]
             [ac-view.input :as input]
+            [ac-view.event :as event]
             ))
 
 (def debug-msg (atom nil)) ; this is for debug
@@ -56,7 +57,7 @@
     (reset! cat-groups {:grp cat-group})
     (reset! status-groups {:grp status-group})
     ;; this is for debug
-    (reset! debug-msg (p/add-text! "" 0 500))
+    (reset! debug-msg (p/add-text! "" 0 500 {:align "left"}))
     ;; Do initializing
     (go-loop []
       ;; add geo objects to geo-group
@@ -82,7 +83,10 @@
 
 (defn- update-game! []
   (input/call-pressed-key-handler!)
-  (set! (.-text @debug-msg) (pr-str :INPUT-DEBUG @input/keys-state))
+  (set! (.-text @debug-msg)
+        (str " INPUT-DEBUG: " @input/keys-state "\n"
+             " RECEIVED-EV: " (pr-str (first @event/test-queue))
+             ))
   ;; TODO
   ;(js/alert "ok")
   nil)

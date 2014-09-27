@@ -6,9 +6,12 @@
             [phaser-cljs.core :as p]
             ))
 
+
+(def test-queue (atom nil))
+
 (defn enqueue! [event]
-  ;; TODO
-  nil)
+  ;; This is test implementation
+  (swap! test-queue #(take 10 (cons event %))))
 
 
 
