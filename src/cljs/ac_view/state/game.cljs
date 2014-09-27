@@ -139,14 +139,19 @@
         0x3F3F3F
         0xBFBFBF] i 0xFFFFFF))
 
+(defn prepare-cat-sprite! [i]
+  (let [sp (asset/gen-cat! :cat0)
+        color (get-cat-color i)]
+    (set! (.-tint sp) color)
+    sp))
+
 (defn prepare-obj-layer-async! []
   (go
     (reset! cat-assets nil)
     (let []
       (dotimes [i cat-num]
         (<! (async/timeout 50))
-        (let [sp (asset/gen-cat! :cat0)
-              color (get-cat-color i)
+        (let [sp (prepare-cat-sprite! i)
               ;pe-jump (p/add-particle-emitter! :1x1)
               ;_ (<! (async/timeout 50))
               ;pe-damage (p/add-particle-emitter! :1x1)
@@ -159,7 +164,6 @@
                     ;:pe-get pe-get
                     }
               ]
-          (set! (.-tint sp) color)
           (.add @obj-layer sp)
           (.kill sp)
           (swap! cat-assets assoc i info)))
@@ -168,6 +172,7 @@
         (.revive sp)
         (set! (.-x sp) 0)
         (set! (.-y sp) -100) ; dummy
+        ;; TODO: add coins
         (swap! prepared-set conj :obj)))))
 
 
@@ -188,6 +193,7 @@
   (go
     (reset! status-windows-info {})
     (let [status-x 730
+          cat-x 706
           status-y 40
           status-y-diff 56]
       (dotimes [i cat-num]
@@ -196,10 +202,15 @@
               y (+ status-y (* i status-y-diff))
               frame-sp (p/add-sprite! :status-frame-other x y)
               _ (.add @status-layer frame-sp)
+              cat-sp (prepare-cat-sprite! i)
+              _ (.add @status-layer cat-sp)
               info {:frame-sprite frame-sp
+                    :cat-sprite cat-sp
                     ;; TODO
                     }
               ]
+          (set! (.-x cat-sp) cat-x)
+          (set! (.-y cat-sp) y)
           ;; TODO: set kill/revive sprites
           (swap! status-windows-info assoc i info)))
       (swap! prepared-set conj :status))))
@@ -245,14 +256,17 @@
     (input/call-pressed-key-handler!)
     (update-geo-from-my-cat-info!)
     )
-  (let [screen-half-w (/ @p/screen-w 2)
-        screen-half-h (/ @p/screen-h 2)
+  (let [blackhole-x (/ @p/screen-w 2) ; TODO
+        blackhole-y (/ @p/screen-h 2) ; TODO: get from my-cat's logical-y
+        angle 0 ; TODO: get from my-cat (or 0)
         ]
     ;; TODO
-    (set! (.-x @geo-layer) screen-half-w)
-    (set! (.-y @geo-layer) screen-half-h)
-    (set! (.-x @obj-layer) screen-half-w)
-    (set! (.-y @obj-layer) screen-half-h)
+    (set! (.-x @geo-layer) blackhole-x)
+    (set! (.-y @geo-layer) blackhole-y)
+    (set! (.-angle @geo-layer) angle)
+    (set! (.-x @obj-layer) blackhole-x)
+    (set! (.-y @obj-layer) blackhole-y)
+    (set! (.-angle @obj-layer) angle)
     ;; implementation for test
     ;(let [s @input/keys-state]
     ;  (when (and (:L s) (not (:R s)))
