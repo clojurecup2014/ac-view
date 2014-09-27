@@ -59,7 +59,7 @@
 (defn register-all-sounds! []
   ;; load from localStorage
   (reset! disable-sound?  (= "1" (js/localStorage.getItem "disable-sound")))
-  (dorun (map #(swap! sound-objs assoc % (-> @p/game .-add (.audio (name %))))
+  (dorun (map #(swap! sound-objs assoc % (p/add-audio! %))
               @sound-keys)))
 
 
