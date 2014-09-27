@@ -13,7 +13,91 @@
             ))
 
 
+(def cat-num 10)
+
+(def coin-num 10)
+
+
 ;;; TODO: Separate to manipulate every status
+
+
+
+
+;(defn gen-cat-slot! [i]
+;  {:nth 0
+;   :id id
+;   :sprite sprite
+;   :pos pos
+;   :status nil
+;   :info {:score 0
+;          :heart 3
+;          :energy 5
+;          }
+;   ;; particle emitter
+;   :pe {:jump (p/add-particle-emitter! :1x1)
+;        :damage (p/add-particle-emitter! :1x1)
+;        :get (p/add-particle-emitter! :1x1)
+;        }
+;   })
+
+(defn gen-coin! [i id theta radius exist]
+  {:nth i
+   :id id
+   :theta theta
+   :radius radius
+   :exist exist
+   })
+
+(defn gen-block! [id start end radius]
+  {:id id
+   :start start
+   :end end
+   :radius radius
+   })
+
+
+(def cat-assets (atom nil))
+
+(defn gen-cat-assets! [number]
+  (let [sp (asset/gen-cat! :cat0)
+        color (nth [0xFFFFFF 0xFFFF7F 0xFF7FFF 0xFF7F7F 0x7FFFFF 0x7FFF7F 0x7F7FFF 0x7F7F7F 0x3F3F3F 0xBFBFBF] number)
+        ;_ (<! (async/timeout 50))
+        ;pe-jump (p/add-particle-emitter! :1x1)
+        ;_ (<! (async/timeout 50))
+        ;pe-damage (p/add-particle-emitter! :1x1)
+        ;_ (<! (async/timeout 50))
+        ;pe-get (p/add-particle-emitter! :1x1)
+        ;_ (<! (async/timeout 50))
+        ]
+    (set! (.-tint sp) color)
+    (.kill sp)
+    {:sprite sp
+     ;:pe-jump pe-jump
+     ;:pe-damage pe-damage
+     ;:pe-get pe-get
+     }))
+
+(defn setup-cat-sprites! []
+  (reset! cat-assets (vec (doall (map gen-cat-assets! (range cat-num))))))
+
+
+(def cat-infos (atom nil))
+
+(defn gen-cat-infos [number]
+  {:id number
+   ;; NB: Use atom for val
+   ;; TODO
+   })
+
+(defn setup-cat-infos []
+  (reset! cat-infos (vec (doall (map gen-cat-infos (range cat-num))))))
+
+
+
+(def my-cat-id (atom nil))
+
+
+
 
 
 (def debug-msg (atom nil)) ; this is for debug
@@ -38,6 +122,20 @@
   ;; TODO: fade-out
   (doall (map #(.destroy %) (vals @msg-groups)))
   (reset! initializing? false))
+
+(defn logical-y->anchor-y [basesize y]
+  (+ 0.5 (* 1 (/ y basesize))))
+
+(defn- add-block-to-geo! [rot y]
+  ;; FIXME: doesn't work
+  (let [g (:grp @geo-groups)
+        size 32
+        b (p/add-sprite!  :step
+                         0 (- y)
+                         size size
+                         0.5 (logical-y->anchor-y size y))]
+    ;(set! (.-angle b) rot)
+    (.add g b)))
 
 (defn create [& _]
   (reset! initializing? true)
@@ -77,23 +175,30 @@
       (.add geo-group (:hole @geo-groups))
       (<! (async/timeout 50))
       ;; dummy block
-      (swap! geo-groups assoc :block (p/add-sprite! :1x1 0 10 10 10 0.5 -5))
-      (.add geo-group (:block @geo-groups))
+      (add-block-to-geo! 30 50)
+      (add-block-to-geo! 60 50)
+      (add-block-to-geo! 60 100)
       (<! (async/timeout 50))
       ;; add status-object to status-group
       ;; TODO
-      (swap! status-groups assoc :status-self (p/add-sprite! :status-frame-me status-x status-y))
-      (swap! status-groups assoc :status-others (vec (map #(p/add-sprite! :status-frame-other status-x (+ status-y (* (inc %) status-y-diff)))
-                                                          (range 9))))
-      (.add status-group (:status-self @status-groups))
+      (swap! status-groups assoc :status-others (vec (map #(p/add-sprite! :status-frame-other status-x (+ status-y (* % status-y-diff)))
+                                                          (range cat-num))))
       (doall (map #(.add status-group %)
                   (:status-others @status-groups)))
+      ;; This is for player (override one of :status-others)
+      (swap! status-groups assoc :status-self (p/add-sprite! :status-frame-me status-x status-y))
+      (.add status-group (:status-self @status-groups))
       (<! (async/timeout 50))
-      (swap! cat-groups assoc :cat0 (asset/gen-cat! :cat0))
-      (set! (.-x (:cat0 @cat-groups)) 400)
-      (set! (.-y (:cat0 @cat-groups)) 200)
-      (.add cat-group (:cat0 @cat-groups))
-      (swap! my-cat-info assoc :sprite (:cat0 @cat-groups))
+      ;; Cats
+      (setup-cat-sprites!)
+      (reset! my-cat-id 0)
+      (let [sp (:sprite (nth @cat-assets 0))]
+        (.revive sp)
+        (set! (.-x sp) 400)
+        (set! (.-y sp) 200)
+        )
+      (doall (map #(.add cat-group (:sprite %))
+                  @cat-assets))
       ;; TODO
       (fade-out-msg!))
     nil))
@@ -109,6 +214,7 @@
 (defn- update-game! []
   (when (game-live?)
     (input/call-pressed-key-handler!))
+  ;; for debug
   (set! (.-text @debug-msg)
         (str " INPUT-DEBUG: " @input/keys-state "\n"
              " RECEIVED-EV: " (pr-str (first @event/test-queue))
@@ -119,23 +225,25 @@
       ;; Dummy rotation
       (set! (.-rotation (:grp @geo-groups))
             (+ (.-rotation (:grp @geo-groups)) 0.1))
-      (set! (.-width (:sprite @my-cat-info)) 32)
-      (.play (:sprite @my-cat-info) "walk")
+      (set! (.-width (:sprite (nth @cat-assets @my-cat-id))) 32)
+      (.play (:sprite (nth @cat-assets @my-cat-id)) "walk")
       nil)
     (when (and (:R s) (not (:L s)))
       ;; Dummy rotation
       (set! (.-rotation (:grp @geo-groups))
             (- (.-rotation (:grp @geo-groups)) 0.1))
-      (set! (.-width (:sprite @my-cat-info)) -32)
-      (.play (:sprite @my-cat-info) "walk")
+      (set! (.-width (:sprite (nth @cat-assets @my-cat-id))) -32)
+      (.play (:sprite (nth @cat-assets @my-cat-id)) "walk")
       nil)
     (when (and (not (:R s)) (not (:L s)))
-      (.play (:sprite @my-cat-info) "stay"))
+      (.play (:sprite (nth @cat-assets @my-cat-id)) "stay"))
     (when (:Z s)
       nil))
   ;; TODO
   ;(js/alert "ok")
   nil)
+
+
 
 (defn update [& _]
   (if @initializing?

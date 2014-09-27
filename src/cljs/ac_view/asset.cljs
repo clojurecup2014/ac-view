@@ -61,6 +61,8 @@
   ;; 有ハート 有エネルギーゲージ
   ;; 空ハート 有エネルギーゲージ
   (p/load-spritesheet! :cat0 "game/driftcat0.png" (/ 128 4) (/ 128 4))
+  (p/load-image! :coin "game/coin.png")
+  (p/load-image! :step "game/step.png")
 
   nil)
 
