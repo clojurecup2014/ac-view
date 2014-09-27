@@ -127,22 +127,23 @@
   (reset! obj-layer (-> @p/game .-add .group))
   nil)
 
-(defn- get-cat-color [i]
-  (nth [0xFFFFFF
-        0xFFFF7F
-        0xFF7FFF
-        0xFF7F7F
-        0x7FFFFF
-        0x7FFF7F
-        0x7F7FFF
-        0x7F7F7F
-        0x3F3F3F
-        0xBFBFBF] i 0xFFFFFF))
+;(defn- get-cat-color [i]
+;  (nth [0xFFFFFF
+;        0xFFFF7F
+;        0xFF7FFF
+;        0xFF7F7F
+;        0x7FFFFF
+;        0x7FFF7F
+;        0x7F7FFF
+;        0x7F7F7F
+;        0x3F3F3F
+;        0xBFBFBF] i 0xFFFFFF))
 
 (defn prepare-cat-sprite! [i]
   (let [sp (asset/gen-cat! :cat0)
-        color (get-cat-color i)]
-    (set! (.-tint sp) color)
+        ;color (get-cat-color i)
+        ]
+    ;(set! (.-tint sp) color) ; NB: tinting kill animation!
     sp))
 
 (defn prepare-obj-layer-async! []
