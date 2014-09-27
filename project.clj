@@ -6,7 +6,7 @@
                  [domina "1.0.3-SNAPSHOT"]
                  [hiccup "1.0.5"]
                  [ring "1.3.1"]
-                 ;[phaser-cljs "0.1.0-SNAPSHOT"] ; It needs `lein install`
+                 [phaser-cljs "0.1.0-SNAPSHOT"] ; It needs `lein install`
                  ]
   :plugins [[lein-cljsbuild "1.0.3"]
             [lein-ring "0.8.11"]]
