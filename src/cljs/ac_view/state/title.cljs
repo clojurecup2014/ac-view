@@ -1,10 +1,13 @@
 (ns ac-view.state.title
-  (:require-macros [ac-view.macros :as m])
+  (:require-macros [ac-view.macros :as m]
+                   [cljs.core.async.macros :refer [go go-loop alt!]])
   (:require [crate.core :as c]
             [domina :as d]
             [domina.events :as ev]
             [phaser-cljs.core :as p]
             [ac-view.asset :as asset]
+            [ac-view.fader :as fader]
+            [cljs.core.async :as async :refer [>! <!]]
             ))
 
 
@@ -19,7 +22,7 @@
 
 (def title-logo (atom nil))
 
-(def fading? (atom nil))
+(def fader (atom nil))
 
 (def menu-keys
   [:menu-start :menu-rule :menu-ranking :menu-sound-off :menu-sound-on])
@@ -42,6 +45,7 @@
 (def selected (atom nil))
 
 (defn preload [& _]
+  (p/disable-visibility-change! true)
   nil)
 
 (defn- reset-with-info! [atm & kvs]
@@ -58,7 +62,6 @@
   (reset! selected k))
 
 (defn create [& _]
-  (p/disable-visibility-change! true)
   (asset/add-bg!)
   (let [screen-w @p/screen-w
         screen-h @p/screen-h
@@ -109,11 +112,16 @@
       (and (not (prev-keys :R)) (@keys-state :R) (not (@keys-state :L))) :R
       :else nil)))
 
+(defn- go-state! [k]
+  (when-not @fader
+    (reset! fader (fader/make!)))
+  (fader/fade! @fader 0 1 #(p/start-state! k)))
+
 (defn- activate-button! [k]
   (case k
-    :menu-start nil
-    :menu-rule nil
-    :menu-ranking nil
+    :menu-start (go-state! :game)
+    :menu-rule (js/alert "not implemented yet") ; TODO
+    :menu-ranking (js/alert "not implemented yet") ; TODO
     :menu-sound-off (do
                       (asset/enable-sound!)
                       (.revive (:menu-sound-on @menu-objs))
@@ -127,7 +135,7 @@
     ))
 
 (defn update [& _]
-  (when-not @fading?
+  (when-not (fader/fading? @fader)
     (when-let [k (get-pressed-key)]
       (cond
         (= :Z k) (activate-button! @selected)
