@@ -60,8 +60,23 @@
   (p/load-spritesheet! :status-item "game/status_item.png" (/ 30 2) (/ 30 2))
   ;; 有ハート 有エネルギーゲージ
   ;; 空ハート 有エネルギーゲージ
+  (p/load-spritesheet! :cat0 "game/driftcat0.png" (/ 128 4) (/ 128 4))
 
   nil)
+
+
+
+(defn gen-cat! [key-or-idx]
+  (let [k (if (keyword? key-or-idx)
+            key-or-idx
+            (keyword (str "cat" key-or-idx)))
+        c (p/add-sprite! k 0 0)]
+    (-> c .-animations (.add "stay" (array 0 1 2 3) 2 true))
+    (-> c .-animations (.add "walk" (array 4 5 6 7) 10 true))
+    (.play c "stay")
+    c))
+
+
 
 
 (def sound-objs (atom {}))
