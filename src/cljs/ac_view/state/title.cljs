@@ -87,8 +87,7 @@
     (p/add-text! "KEYBOARD-Z: select, jump" 100 400)
     (p/add-text! "CURSOR-LEFT and RIGHT: move" 400 400)
 
-    ;; TODO: Move to phaser-cljs
-    (-> @p/game .-input .-keyboard (.addKeyCapture (array js/Phaser.Keyboard.LEFT js/Phaser.Keyboard.RIGHT js/Phaser.Keyboard.Z)))
+    (p/add-key-capture! :LEFT :RIGHT :Z)
     (button-select! :menu-start)
 
     nil))
@@ -98,11 +97,11 @@
 (defn- get-pressed-key []
   (let [prev-keys @keys-state]
     (reset! keys-state #{})
-    (when (-> @p/game .-input .-keyboard (.isDown js/Phaser.Keyboard.LEFT))
+    (when (p/is-key-down? :LEFT)
       (swap! keys-state conj :L))
-    (when (-> @p/game .-input .-keyboard (.isDown js/Phaser.Keyboard.RIGHT))
+    (when (p/is-key-down? :RIGHT)
       (swap! keys-state conj :R))
-    (when (-> @p/game .-input .-keyboard (.isDown js/Phaser.Keyboard.Z))
+    (when (p/is-key-down? :Z)
       (swap! keys-state conj :Z))
     (cond
       (and (not (prev-keys :Z)) (@keys-state :Z)) :Z
