@@ -49,6 +49,18 @@
   ;; sounds
   (register-se! :beep "beep.ogg" "beep.mp3")
 
+  ;; game
+  (p/load-spritesheet! :numbers "game/number.png" (/ 174 6) (/ 116 4))
+  ;; 0 1 2 3 4 5
+  ;; 0 1 2 3 4 5
+  ;; 6 7 8 9 10
+  ;; 6 7 8 9 10
+  (p/load-image! :status-frame-me "game/status_frame_me.png")
+  (p/load-image! :status-frame-other "game/status_frame_other.png")
+  (p/load-spritesheet! :status-item "game/status_item.png" (/ 30 2) (/ 30 2))
+  ;; 有ハート 有エネルギーゲージ
+  ;; 空ハート 有エネルギーゲージ
+
   nil)
 
 

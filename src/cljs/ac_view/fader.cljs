@@ -36,11 +36,11 @@
     (cancel! fobj)
     (set! (.-alpha fobj) start)
     (.revive fobj)
-    (.bringToTop fobj)
     (set! (.---faded? fobj) true)
     (let [diff (- end start)
           begin (js/Date.now)]
       (go-loop []
+        (.bringToTop fobj)
         (<! (async/timeout interval))
         (let [elapsed (- (js/Date.now) begin)
               new-alpha (min 1 (max 0 (+ start (* diff (/ elapsed fade-time)))))]

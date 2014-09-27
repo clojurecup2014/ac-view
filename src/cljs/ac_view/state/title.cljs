@@ -74,7 +74,7 @@
                                (add-button-animation!)))
         ]
     (reset! menu-objs
-            {:hole (gen-sprite-button! :hole screen-w-half screen-h-half)
+            {:hole (p/add-sprite! :hole screen-w-half screen-h-half)
              :title-logo (gen-sprite-button! :title-logo screen-w-half 200)
              :menu-frame (gen-sprite-button! :menu-frame screen-w-half menu-y)
              :menu-start (gen-sprite-button! :menu-game-start 250 menu-y)

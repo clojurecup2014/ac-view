@@ -12,21 +12,56 @@
 
 (def fader (atom nil))
 
+(def msg-groups (atom {}))
+
+(def initializing? (atom nil))
+
 
 (defn preload [& _]
   (p/disable-visibility-change! true)
   nil)
 
+(defn fade-out-msg! []
+  ;; TODO: fade-out
+  (doall (map #(.destroy %) (vals @msg-groups)))
+  (reset! initializing? false))
 
 (defn create [& _]
+  (reset! initializing? true)
   (reset! fader (fader/make!))
   (asset/add-bg!)
-  (fader/fade! @fader 1 0 #(js/alert "TODO"))
+  ;; TODO: Should display wait-to-initialize messages
+  (let [bs (p/add-sprite! :1x1  0 0 @p/screen-w @p/screen-h 0 0)
+        ;hole (p/add-sprite! :hole screen-w-half screen-h-half)
+        msg-group (-> @p/game .-add .group)
+        geo-group (-> @p/game .-add .group)
+        msg (p/add-text! "Initializing ..." 300 300)
+        ]
+    (set! (.-tint bs) 0)
+    (set! (.-alpha bs) 1)
+    (set! (.-z bs) 1000)
+    (reset! msg-groups {:grp msg-group :bs bs :msg msg})
+    ;; TODO: add geo objects to geo-group
+    ;; Do initializing
+    (go-loop []
+      (<! (async/timeout 2000))
+      ;; TODO
+      (fade-out-msg!))
+    nil))
+
+(defn- update-init! []
+  ;; TODO
   nil)
 
+(defn- update-game! []
+  ;; TODO
+  ;(js/alert "ok")
+  nil)
 
 (defn update [& _]
-  nil)
+  (if @initializing?
+    (update-init!)
+    (update-game!)))
 
 
 

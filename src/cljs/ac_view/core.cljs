@@ -5,9 +5,10 @@
             [domina.events :as ev]
             [phaser-cljs.core :as p]
             [ac-view.state :as state]
+            [ac-view.input :as input]
             ))
 
-(defn ^:export bootstrap [target-id]
+(defn ^:export bootstrap [target-id & [handle-l handle-r handle-z]]
   (if-not js/window.WebSocket
     (js/alert "Don't support WebSocket to your browser!")
     (let [dom (d/by-id target-id)]
@@ -15,4 +16,10 @@
       (p/init! 800 600 target-id "assets")
       (state/add-all!)
       (p/start-state! :bootstrap)
+      (when handle-l
+        (input/set-handler! :L handle-l))
+      (when handle-r
+        (input/set-handler! :R handle-r))
+      (when handle-l
+        (input/set-handler! :Z handle-z))
       )))
