@@ -11,12 +11,14 @@
             [ac-view.input :as input]
             ))
 
+(def debug-msg (atom nil)) ; this is for debug
+
 (def fader (atom nil))
 
 (def msg-groups (atom {}))
 (def geo-groups (atom {}))
-
-(def debug-msg (atom nil))
+(def cat-groups (atom {}))
+(def status-groups (atom {}))
 
 (def initializing? (atom nil))
 
@@ -37,8 +39,13 @@
   ;; TODO: Should display wait-to-initialize messages
   (let [bs (p/add-sprite! :1x1  0 0 @p/screen-w @p/screen-h 0 0)
         geo-group (-> @p/game .-add .group)
+        cat-group (-> @p/game .-add .group)
+        status-group (-> @p/game .-add .group)
         msg-group (-> @p/game .-add .group)
         msg (p/add-text! "Initializing ..." 300 300)
+        status-x 730
+        status-y 40
+        status-y-diff 56
         ]
     (set! (.-tint bs) 0)
     (set! (.-alpha bs) 1)
@@ -46,14 +53,24 @@
     (.add msg-group msg)
     (reset! msg-groups {:grp msg-group :bs bs :msg msg})
     (reset! geo-groups {:grp geo-group})
+    (reset! cat-groups {:grp cat-group})
+    (reset! status-groups {:grp status-group})
     ;; this is for debug
     (reset! debug-msg (p/add-text! "" 0 500))
-    ;; TODO: add geo objects to geo-group
     ;; Do initializing
     (go-loop []
+      ;; add geo objects to geo-group
       ;; TODO
       (swap! geo-groups assoc :hole (p/add-sprite! :hole (/ @p/screen-w 2) (/ @p/screen-h 2)))
       (.add geo-group (:hole @geo-groups))
+      ;; add status-object to status-group
+      ;; TODO
+      (swap! status-groups assoc :status-self (p/add-sprite! :status-frame-me status-x status-y))
+      (swap! status-groups assoc :status-others (vec (map #(p/add-sprite! :status-frame-other status-x (+ status-y (* (inc %) status-y-diff)))
+                                                          (range 9))))
+      (.add status-group (:status-self @status-groups))
+      (doall (map #(.add status-group %)
+                  (:status-others @status-groups)))
       (<! (async/timeout 2000))
       ;; TODO
       (fade-out-msg!))
