@@ -67,6 +67,12 @@
   nil)
 
 
+(defn get-numbers-index [number & [altered?]]
+  (if (<= 0 number 10)
+    (let [i (nth [0 1 2 3 4 5 12 13 14 15 16] number)]
+      (if altered? (+ i 6) i))
+    0)) ; error
+
 
 (defn gen-cat! [key-or-idx]
   (let [k (if (keyword? key-or-idx)
