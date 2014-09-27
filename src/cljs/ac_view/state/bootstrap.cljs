@@ -17,6 +17,7 @@
 
 (defn create [& _]
   (p/disable-visibility-change! true)
+  (asset/register-all-sounds!)
   (asset/add-bg!)
   nil)
 
