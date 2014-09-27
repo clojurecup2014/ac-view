@@ -74,7 +74,7 @@
             (keyword (str "cat" key-or-idx)))
         c (p/add-sprite! k 0 0)]
     (-> c .-animations (.add "stay" (array 0 1 2 3) 2 true))
-    (-> c .-animations (.add "walk" (array 4 5 6 7) 10 true))
+    (-> c .-animations (.add "walk" (array 4 5 6) 10 true))
     (.play c "stay")
     c))
 

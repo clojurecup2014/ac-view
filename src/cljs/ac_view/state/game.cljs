@@ -86,7 +86,7 @@
   (set! (.-y @geo-layer) (/ @p/screen-h 2))
   nil)
 
-(defn- logical-y->anchor-y [basesize y]
+(defn logical-y->anchor-y [basesize y]
   (+ (/ y basesize) 0.5))
 
 (defn- add-block-to-geo! [theta logical-y]
@@ -169,10 +169,13 @@
           (.kill sp)
           (swap! cat-assets assoc i info)))
       (reset! my-cat-id 0) ; TODO: THIS IS FOR TEST!
-      (let [sp (:sprite (get @cat-assets @my-cat-id))]
+      (let [sp (:sprite (get @cat-assets @my-cat-id))
+            logical-y 300
+            ]
         (.revive sp)
         (set! (.-x sp) 0)
-        (set! (.-y sp) -100) ; dummy
+        (set! (.-y sp) 0)
+        (-> sp .-anchor (.setTo 0.5 (logical-y->anchor-y 32 logical-y)))
         ;; TODO: add coins
         (swap! prepared-set conj :obj)))))
 
@@ -212,6 +215,7 @@
               ]
           (set! (.-x cat-sp) cat-x)
           (set! (.-y cat-sp) y)
+          ;; TODO: add more status information sprites
           ;; TODO: set kill/revive sprites
           (swap! status-windows-info assoc i info)))
       (swap! prepared-set conj :status))))
@@ -233,17 +237,19 @@
 
 
 
+(defn update-cat-sprite-position! [sp angle logical-y]
+  (-> sp .-anchor (.setTo 0.5 (logical-y->anchor-y 32 logical-y)))
+  (set! (.-angle sp) angle))
 
 
 
+(def _my-cat-angle (atom 0)) ; DUMMY FOR TEST
+(defn- get-my-cat-angle []
+  @_my-cat-angle)
 
 
 (defn- update-preparation! []
   ;; TODO: display progress of preparation
-  nil)
-
-(defn- update-geo-from-my-cat-info! []
-  ;; TODO
   nil)
 
 (defn- update-game! []
@@ -252,15 +258,17 @@
     (str " INPUT-DEBUG: " @input/keys-state "\n"
          " RECEIVED-EV: " (pr-str (first @event/test-queue))
          ))
-
-  (when @my-cat-id ; game is live?
-    (input/call-pressed-key-handler!)
-    (update-geo-from-my-cat-info!)
-    )
+  ;; game is alive?
+  (when @my-cat-id
+    (input/call-pressed-key-handler!))
+  ;; update all
   (let [blackhole-x (/ @p/screen-w 2) ; TODO
         blackhole-y (/ @p/screen-h 2) ; TODO: get from my-cat's logical-y
-        angle 0 ; TODO: get from my-cat (or 0)
+        my-cat-angle (get-my-cat-angle)
+        angle (- my-cat-angle)
         ]
+    (update-cat-sprite-position!
+      (:sprite (get @cat-assets @my-cat-id)) my-cat-angle 200)
     ;; TODO
     (set! (.-x @geo-layer) blackhole-x)
     (set! (.-y @geo-layer) blackhole-y)
@@ -268,28 +276,22 @@
     (set! (.-x @obj-layer) blackhole-x)
     (set! (.-y @obj-layer) blackhole-y)
     (set! (.-angle @obj-layer) angle)
-    ;; implementation for test
-    ;(let [s @input/keys-state]
-    ;  (when (and (:L s) (not (:R s)))
-    ;    ;; Dummy rotation
-    ;    (set! (.-rotation (:layer @geo-groups))
-    ;          (+ (.-rotation (:layer @geo-groups)) 0.1))
-    ;    (set! (.-width (:sprite (nth @cat-assets @my-cat-id))) block-size)
-    ;    (.play (:sprite (nth @cat-assets @my-cat-id)) "walk")
-    ;    nil)
-    ;  (when (and (:R s) (not (:L s)))
-    ;    ;; Dummy rotation
-    ;    (set! (.-rotation (:layer @geo-groups))
-    ;          (- (.-rotation (:layer @geo-groups)) 0.1))
-    ;    (set! (.-width (:sprite (nth @cat-assets @my-cat-id))) -block-size)
-    ;    (.play (:sprite (nth @cat-assets @my-cat-id)) "walk")
-    ;    nil)
-    ;  (when (and (not (:R s)) (not (:L s)))
-    ;    (.play (:sprite (nth @cat-assets @my-cat-id)) "stay"))
-    ;  (when (:Z s)
-    ;    nil))
-    ;; TODO
-    ;(js/alert "ok")
+    ;; DUMMY IMPLEMENTATION FOR TEST
+    (let [s @input/keys-state]
+      (when (and (:L s) (not (:R s)))
+        (swap! _my-cat-angle dec)
+        (.play (:sprite (get @cat-assets @my-cat-id)) "walk")
+        (set! (.-width (:sprite (get @cat-assets @my-cat-id))) block-size)
+        nil)
+      (when (and (:R s) (not (:L s)))
+        (swap! _my-cat-angle inc)
+        (set! (.-width (:sprite (get @cat-assets @my-cat-id))) (- block-size))
+        (.play (:sprite (get @cat-assets @my-cat-id)) "walk")
+        nil)
+      (when (and (not (:R s)) (not (:L s)))
+        (.play (:sprite (get @cat-assets @my-cat-id)) "stay"))
+      (when (:Z s)
+        nil))
     nil))
 
 
