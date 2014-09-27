@@ -9,7 +9,6 @@
 
 
 (defn preload [& _]
-  (p/disable-visibility-change!)
   ;; Refit screen size
   (p/set-resize-handler!)
   ;; Loading assets
@@ -17,6 +16,7 @@
   nil)
 
 (defn create [& _]
+  (p/disable-visibility-change! true)
   (asset/add-bg!)
   nil)
 

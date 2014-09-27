@@ -15,8 +15,8 @@
 
   ;; title
   (p/load-image! :menu-frame "top/menu_frame.png")
-  (p/load-spritesheet! :menu-game-off "top/menu_game_off.png" 75 26)
-  (p/load-spritesheet! :menu-game-on "top/menu_game_on.png" 72 26)
+  (p/load-spritesheet! :menu-sound-off "top/menu_game_off.png" 75 26)
+  (p/load-spritesheet! :menu-sound-on "top/menu_game_on.png" 72 26)
   (p/load-spritesheet! :menu-game-ranking "top/menu_game_ranking.png" 103 26)
   (p/load-spritesheet! :menu-game-rule "top/menu_game_rule.png" 68 26)
   (p/load-spritesheet! :menu-game-start "top/menu_game_start.png" 138 26)

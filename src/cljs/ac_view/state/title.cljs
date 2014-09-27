@@ -11,35 +11,62 @@
 (def hole (atom nil))
 
 (def menu-frame (atom nil))
-(def menu-game-off (atom nil))
-(def menu-game-on (atom nil))
+(def menu-sound-off (atom nil))
+(def menu-sound-on (atom nil))
 (def menu-ranking (atom nil))
 (def menu-rule (atom nil))
 (def menu-start (atom nil))
 
 (def title-logo (atom nil))
 
+(def menu-keys
+  [:menu-start :menu-rule :menu-ranking :menu-sound-off :menu-sound-on])
+(def menu-objs (atom nil))
+(def selected (atom nil))
+
 (defn preload [& _]
   nil)
 
+(defn- reset-with-info! [atm & kvs]
+  (reset! atm (apply hash-map kvs)))
+
+(defn- add-button-animation! [obj]
+  (-> obj .-animations (.add "off" (array 0) 1 false))
+  (-> obj .-animations (.add "on" (array 1) 1 false))
+  (.play obj "off"))
+
+(defn- button-select! [k]
+  (dorun (map #(.play (get @menu-objs %) "off") menu-keys))
+  (.play (get @menu-objs k) "on")
+  (reset! selected k))
+
 (defn create [& _]
+  (p/disable-visibility-change! true)
   (asset/add-bg!)
   (let [screen-w @p/screen-w
         screen-h @p/screen-h
         screen-w-half (/ screen-w 2)
         screen-h-half (/ screen-h 2)
+        menu-y 500
+        sound-x 550
+        gen-sprite-button! (fn [k x y]
+                             (doto (p/add-sprite! k x y)
+                               (add-button-animation!)))
         ]
-    (reset! hole (p/add-sprite! :hole screen-w-half screen-h-half))
+    (reset! menu-objs
+            {:hole (gen-sprite-button! :hole screen-w-half screen-h-half)
+             :title-logo (gen-sprite-button! :title-logo screen-w-half 200)
+             :menu-frame (gen-sprite-button! :menu-frame screen-w-half menu-y)
+             :menu-start (gen-sprite-button! :menu-game-start 250 menu-y)
+             :menu-rule (gen-sprite-button! :menu-game-rule 350 menu-y)
+             :menu-ranking (gen-sprite-button! :menu-game-ranking 450 menu-y)
+             :menu-sound-off (gen-sprite-button! :menu-sound-off sound-x menu-y)
+             :menu-sound-on (gen-sprite-button! :menu-sound-on sound-x menu-y)
+             })
+    (.kill (:menu-sound-off @menu-objs))
 
-    (reset! title-logo (p/add-sprite! :title-logo screen-w-half 200))
+    (button-select! :menu-start)
 
-    ;; TODO: work
-    (reset! menu-frame (p/add-sprite! :menu-frame screen-w-half 500))
-    (reset! menu-start (p/add-sprite! :menu-game-start 250 500))
-    (reset! menu-rule (p/add-sprite! :menu-game-rule 350 500))
-    (reset! menu-ranking (p/add-sprite! :menu-game-ranking 450 500))
-    (reset! menu-game-off (p/add-sprite! :menu-game-off 550 500))
-    (reset! menu-game-on (p/add-sprite! :menu-game-on 550 550))
     nil))
 
 (defn update [& _]
