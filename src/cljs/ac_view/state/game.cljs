@@ -87,16 +87,14 @@
   nil)
 
 (defn- logical-y->anchor-y [basesize y]
-  (+ 0.5 (* 1 (/ y basesize))))
+  (+ (/ y basesize) 0.5))
 
 (defn- add-block-to-geo! [theta logical-y]
-  ;; FIXME: doesn't work
-  (let [
-        b (p/add-sprite!  :step
-                         0 (- logical-y)
+  (let [b (p/add-sprite!  :step
+                         0 0
                          block-size block-size
                          0.5 (logical-y->anchor-y block-size logical-y))]
-    ;(set! (.-angle b) theta)
+    (set! (.-angle b) theta)
     (.add @geo-layer b)))
 
 (defn prepare-geo-layer-async! []
@@ -105,9 +103,10 @@
       (.add @geo-layer hole))
     (<! (async/timeout 50))
     ;; dummy block (TODO)
-    (add-block-to-geo! 30 50)
-    (add-block-to-geo! 60 50)
-    (add-block-to-geo! 60 100)
+    (add-block-to-geo! 0 150)
+    (add-block-to-geo! 30 150)
+    (add-block-to-geo! 60 150)
+    (add-block-to-geo! 60 200)
     (swap! prepared-set conj :geo)))
 
 
