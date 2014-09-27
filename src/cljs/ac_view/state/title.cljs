@@ -7,6 +7,7 @@
             [phaser-cljs.core :as p]
             [ac-view.asset :as asset]
             [ac-view.fader :as fader]
+            [ac-view.input :as input]
             [cljs.core.async :as async :refer [>! <!]]
             ))
 
@@ -90,27 +91,10 @@
     (p/add-text! "KEYBOARD-Z: select, jump" 100 400)
     (p/add-text! "CURSOR-LEFT and RIGHT: move" 400 400)
 
-    (p/add-key-capture! :LEFT :RIGHT :Z)
+    (input/add-key-capture!)
     (button-select! :menu-start)
 
     nil))
-
-(def keys-state (atom #{}))
-
-(defn- get-pressed-key []
-  (let [prev-keys @keys-state]
-    (reset! keys-state #{})
-    (when (p/is-key-down? :LEFT)
-      (swap! keys-state conj :L))
-    (when (p/is-key-down? :RIGHT)
-      (swap! keys-state conj :R))
-    (when (p/is-key-down? :Z)
-      (swap! keys-state conj :Z))
-    (cond
-      (and (not (prev-keys :Z)) (@keys-state :Z)) :Z
-      (and (not (prev-keys :L)) (@keys-state :L) (not (@keys-state :R))) :L
-      (and (not (prev-keys :R)) (@keys-state :R) (not (@keys-state :L))) :R
-      :else nil)))
 
 (defn- go-state! [k]
   (when-not @fader
@@ -136,7 +120,7 @@
 
 (defn update [& _]
   (when-not (fader/fading? @fader)
-    (when-let [k (get-pressed-key)]
+    (when-let [k (input/get-just-pressed-key)]
       (cond
         (= :Z k) (activate-button! @selected)
         (= :L k) (button-select! (menu-left @selected))

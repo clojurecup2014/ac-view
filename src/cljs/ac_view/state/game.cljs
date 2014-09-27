@@ -8,11 +8,14 @@
             [phaser-cljs.core :as p]
             [ac-view.asset :as asset]
             [ac-view.fader :as fader]
+            [ac-view.input :as input]
             ))
 
 (def fader (atom nil))
 
 (def msg-groups (atom {}))
+
+(def debug-msg (atom nil))
 
 (def initializing? (atom nil))
 
@@ -41,6 +44,8 @@
     (set! (.-alpha bs) 1)
     (set! (.-z bs) 1000)
     (reset! msg-groups {:grp msg-group :bs bs :msg msg})
+    ;; this is for debug
+    (reset! debug-msg (p/add-text! "" 0 500))
     ;; TODO: add geo objects to geo-group
     ;; Do initializing
     (go-loop []
@@ -54,6 +59,8 @@
   nil)
 
 (defn- update-game! []
+  (input/call-pressed-key-handler!)
+  (set! (.-text @debug-msg) (pr-str :INPUT-DEBUG @input/keys-state))
   ;; TODO
   ;(js/alert "ok")
   nil)
