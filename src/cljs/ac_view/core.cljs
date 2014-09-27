@@ -6,7 +6,11 @@
             [phaser-cljs.core :as p]
             [ac-view.state :as state]
             [ac-view.input :as input]
+            [ac-view.event :as event]
             ))
+
+(defn ^:export call-event! [event]
+  (event/enqueue! event))
 
 (defn ^:export bootstrap [target-id & [handle-l handle-r handle-z]]
   (if-not js/window.WebSocket
