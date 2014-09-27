@@ -1,3 +1,4 @@
 /target/
 /resources/public/cljs.js
 /src/cljs/phaser_cljs
+/pom.xml
