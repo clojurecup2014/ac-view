@@ -45,6 +45,6 @@
 
 
 (defn set-handler! [k handle]
-  (reset! key-handlers assoc k handle))
+  (swap! key-handlers assoc k handle))
 
 
