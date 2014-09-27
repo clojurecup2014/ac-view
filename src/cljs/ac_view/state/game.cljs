@@ -10,17 +10,9 @@
             [ac-view.fader :as fader]
             [ac-view.input :as input]
             [ac-view.event :as event]
+            [ac-view.state.game.common :as gcommon]
+            [ac-view.state.game.status :as gstatus]
             ))
-
-
-(def block-size 32)
-
-(def cat-num 10)
-
-(def coin-num 10)
-
-(def fader (atom nil))
-
 
 
 ;;; display debug info
@@ -39,7 +31,6 @@
 ;;; preparation info
 
 (def preparing? (atom nil))
-(def prepared-set (atom #{}))
 
 (def preparation-layer (atom nil))
 
@@ -60,8 +51,7 @@
   (handle))
 
 (defn prepare-is-all-done? []
-  (console.log (count @prepared-set))
-  (<= 3 (count @prepared-set)))
+  (<= 3 (count @gcommon/prepared-set)))
 
 
 
@@ -92,8 +82,8 @@
 (defn- add-block-to-geo! [theta logical-y]
   (let [b (p/add-sprite!  :step
                          0 0
-                         block-size block-size
-                         0.5 (logical-y->anchor-y block-size logical-y))]
+                         gcommon/block-size gcommon/block-size
+                         0.5 (logical-y->anchor-y gcommon/block-size logical-y))]
     (set! (.-angle b) theta)
     (.add @geo-layer b)))
 
@@ -107,7 +97,7 @@
     (add-block-to-geo! 30 150)
     (add-block-to-geo! 60 150)
     (add-block-to-geo! 60 200)
-    (swap! prepared-set conj :geo)))
+    (swap! gcommon/prepared-set conj :geo)))
 
 
 
@@ -127,32 +117,13 @@
   (reset! obj-layer (-> @p/game .-add .group))
   nil)
 
-;(defn- get-cat-color [i]
-;  (nth [0xFFFFFF
-;        0xFFFF7F
-;        0xFF7FFF
-;        0xFF7F7F
-;        0x7FFFFF
-;        0x7FFF7F
-;        0x7F7FFF
-;        0x7F7F7F
-;        0x3F3F3F
-;        0xBFBFBF] i 0xFFFFFF))
-
-(defn prepare-cat-sprite! [i]
-  (let [sp (asset/gen-cat! :cat0)
-        ;color (get-cat-color i)
-        ]
-    ;(set! (.-tint sp) color) ; NB: tinting kill animation!
-    sp))
-
 (defn prepare-obj-layer-async! []
   (go
     (reset! cat-assets nil)
     (let []
-      (dotimes [i cat-num]
+      (dotimes [i gcommon/cat-num]
         (<! (async/timeout 50))
-        (let [sp (prepare-cat-sprite! i)
+        (let [sp (gcommon/prepare-cat-sprite! i)
               ;pe-jump (p/add-particle-emitter! :1x1)
               ;_ (<! (async/timeout 50))
               ;pe-damage (p/add-particle-emitter! :1x1)
@@ -175,50 +146,12 @@
         (.revive sp)
         (set! (.-x sp) 0)
         (set! (.-y sp) 0)
-        (-> sp .-anchor (.setTo 0.5 (logical-y->anchor-y 32 logical-y)))
+        (-> sp .-anchor (.setTo 0.5 (logical-y->anchor-y gcommon/block-size logical-y)))
         ;; TODO: add coins
-        (swap! prepared-set conj :obj)))))
+        (swap! gcommon/prepared-set conj :obj)))))
 
 
 
-
-
-;;; displaying cats status
-
-(def status-layer (atom nil))
-
-(defn add-status-layer! []
-  (reset! status-layer (-> @p/game .-add .group))
-  nil)
-
-(def status-windows-info (atom {})) ; {status-id info-map, ...}
-
-(defn prepare-status-layer-async! []
-  (go
-    (reset! status-windows-info {})
-    (let [status-x 730
-          cat-x 706
-          status-y 40
-          status-y-diff 56]
-      (dotimes [i cat-num]
-        (<! (async/timeout 50))
-        (let [x status-x
-              y (+ status-y (* i status-y-diff))
-              frame-sp (p/add-sprite! :status-frame-other x y)
-              _ (.add @status-layer frame-sp)
-              cat-sp (prepare-cat-sprite! i)
-              _ (.add @status-layer cat-sp)
-              info {:frame-sprite frame-sp
-                    :cat-sprite cat-sp
-                    ;; TODO
-                    }
-              ]
-          (set! (.-x cat-sp) cat-x)
-          (set! (.-y cat-sp) y)
-          ;; TODO: add more status information sprites
-          ;; TODO: set kill/revive sprites
-          (swap! status-windows-info assoc i info)))
-      (swap! prepared-set conj :status))))
 
 
 
@@ -238,7 +171,7 @@
 
 
 (defn update-cat-sprite-position! [sp angle logical-y]
-  (-> sp .-anchor (.setTo 0.5 (logical-y->anchor-y 32 logical-y)))
+  (-> sp .-anchor (.setTo 0.5 (logical-y->anchor-y gcommon/block-size logical-y)))
   (set! (.-angle sp) angle))
 
 
@@ -281,11 +214,11 @@
       (when (and (:L s) (not (:R s)))
         (swap! _my-cat-angle dec)
         (.play (:sprite (get @cat-assets @my-cat-id)) "walk")
-        (set! (.-width (:sprite (get @cat-assets @my-cat-id))) block-size)
+        (set! (.-width (:sprite (get @cat-assets @my-cat-id))) gcommon/block-size)
         nil)
       (when (and (:R s) (not (:L s)))
         (swap! _my-cat-angle inc)
-        (set! (.-width (:sprite (get @cat-assets @my-cat-id))) (- block-size))
+        (set! (.-width (:sprite (get @cat-assets @my-cat-id))) (- gcommon/block-size))
         (.play (:sprite (get @cat-assets @my-cat-id)) "walk")
         nil)
       (when (and (not (:R s)) (not (:L s)))
@@ -312,19 +245,19 @@
 
 (defn create [& _]
   (reset! preparing? true)
-  (reset! prepared-set #{})
-  (reset! fader (fader/make!))
+  (reset! gcommon/prepared-set #{})
+  (reset! gcommon/fader (fader/make!))
   ;; TODO: Be careful to execution sequence of layers!
   (asset/add-bg!)
   (add-geo-layer!)
   (add-obj-layer!)
-  (add-status-layer!)
+  (gstatus/add-status-layer!)
   (add-preparation-layer!)
   (add-debug-msg!) ; this is for debug only
   ;; prepare sprites and others
   (prepare-geo-layer-async!)
   (prepare-obj-layer-async!)
-  (prepare-status-layer-async!)
+  (gstatus/prepare-status-layer-async!)
   (go-loop []
     (<! (async/timeout 500))
     (if (prepare-is-all-done?)
