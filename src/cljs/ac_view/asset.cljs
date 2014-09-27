@@ -68,10 +68,19 @@
 
 
 (defn get-numbers-index [number & [altered?]]
-  (if (<= 0 number 10)
+  (if (and (integer? number) (<= 0 number 10))
     (let [i (nth [0 1 2 3 4 5 12 13 14 15 16] number)]
       (if altered? (+ i 6) i))
-    0)) ; error
+    17)) ; empty
+
+(defn gen-numbers! []
+  (let [sp (p/add-sprite! :numbers 0 0)]
+    (dotimes [i (* 4 6)]
+      (-> sp .-animations (.add (str i) (array i) 1 false)))
+    sp))
+
+(defn set-numbers! [sp & [number]]
+  (.play sp (get-numbers-index number)))
 
 
 (defn gen-cat! [key-or-idx]
