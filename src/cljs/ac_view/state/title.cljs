@@ -1,4 +1,4 @@
-(ns ac-view.state.bootstrap
+(ns ac-view.state.title
   (:require-macros [ac-view.macros :as m])
   (:require [crate.core :as c]
             [domina :as d]
@@ -9,18 +9,15 @@
 
 
 (defn preload [& _]
-  ;; Refit screen size
-  (p/set-resize-handler!)
-  ;; Loading assets
-  (asset/load-all-assets!)
   nil)
 
 (defn create [& _]
   (asset/add-bg!)
+  ;; TODO: Add more assets
+  ;(js/alert "this is title")
   nil)
 
 (defn update [& _]
-  (p/start-state! :title)
   ;; TODO
   nil)
 
