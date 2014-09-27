@@ -21,10 +21,6 @@
 
 (def fading? (atom nil))
 
-(defn muted? []
-  ;; TODO
-  false)
-
 (def menu-keys
   [:menu-start :menu-rule :menu-ranking :menu-sound-off :menu-sound-on])
 (defn menu-left [k]
@@ -37,7 +33,7 @@
 (defn menu-right [k]
   ({:menu-start :menu-rule
     :menu-rule :menu-ranking
-    :menu-ranking (if (muted?) :menu-sound-off :menu-sound-on)
+    :menu-ranking (if @asset/disable-sound? :menu-sound-off :menu-sound-on)
     :menu-sound-off :menu-sound-off
     :menu-sound-on :menu-sound-on
     } k))
@@ -84,9 +80,11 @@
              :menu-sound-off (gen-sprite-button! :menu-sound-off sound-x menu-y)
              :menu-sound-on (gen-sprite-button! :menu-sound-on sound-x menu-y)
              })
-    (.kill (:menu-sound-off @menu-objs))
+    (if @asset/disable-sound?
+      (.kill (:menu-sound-on @menu-objs))
+      (.kill (:menu-sound-off @menu-objs)))
 
-    (p/add-text! "KEYBOARD-Z: select" 100 400)
+    (p/add-text! "KEYBOARD-Z: select, jump" 100 400)
     (p/add-text! "CURSOR-LEFT and RIGHT: move" 400 400)
 
     ;; TODO: Move to phaser-cljs
@@ -117,19 +115,27 @@
     :menu-start nil
     :menu-rule nil
     :menu-ranking nil
-    :menu-sound-off nil
-    :menu-sound-on nil
+    :menu-sound-off (do
+                      (asset/enable-sound!)
+                      (.revive (:menu-sound-on @menu-objs))
+                      (.kill (:menu-sound-off @menu-objs))
+                      (button-select! :menu-sound-on))
+    :menu-sound-on (do
+                      (asset/disable-sound!)
+                      (.revive (:menu-sound-off @menu-objs))
+                      (.kill (:menu-sound-on @menu-objs))
+                      (button-select! :menu-sound-off))
     ))
 
 (defn update [& _]
   (when-not @fading?
     (when-let [k (get-pressed-key)]
-      (asset/beep!)
       (cond
         (= :Z k) (activate-button! @selected)
         (= :L k) (button-select! (menu-left @selected))
         (= :R k) (button-select! (menu-right @selected))
-        ))))
+        )
+      (asset/beep!))))
 
 
 

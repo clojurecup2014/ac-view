@@ -14,10 +14,16 @@
 (def disable-sound? (atom nil))
 (defn enable-sound! []
   ;; TODO: Replay bgm
-  (reset! disable-sound? false))
+  (reset! disable-sound? false)
+  (js/localStorage.setItem "disable-sound" "0"))
 (defn disable-sound! []
   ;; TODO: Stop bgm
-  (reset! disable-sound? true))
+  (reset! disable-sound? true)
+  (js/localStorage.setItem "disable-sound" "1"))
+(defn toggle-sound! []
+  (if @disable-sound?
+    (enable-sound!)
+    (disable-sound!)))
 
 (def sound-keys (atom #{}))
 
@@ -48,7 +54,11 @@
 
 (def sound-objs (atom {}))
 
+
+
 (defn register-all-sounds! []
+  ;; load from localStorage
+  (reset! disable-sound?  (= "1" (js/localStorage.getItem "disable-sound")))
   (dorun (map #(swap! sound-objs assoc % (-> @p/game .-add (.audio (name %))))
               @sound-keys)))
 
