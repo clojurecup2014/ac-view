@@ -14,6 +14,7 @@
 (def fader (atom nil))
 
 (def msg-groups (atom {}))
+(def geo-groups (atom {}))
 
 (def debug-msg (atom nil))
 
@@ -35,20 +36,24 @@
   (asset/add-bg!)
   ;; TODO: Should display wait-to-initialize messages
   (let [bs (p/add-sprite! :1x1  0 0 @p/screen-w @p/screen-h 0 0)
-        ;hole (p/add-sprite! :hole screen-w-half screen-h-half)
-        msg-group (-> @p/game .-add .group)
         geo-group (-> @p/game .-add .group)
+        msg-group (-> @p/game .-add .group)
         msg (p/add-text! "Initializing ..." 300 300)
         ]
     (set! (.-tint bs) 0)
     (set! (.-alpha bs) 1)
-    (set! (.-z bs) 1000)
+    (.add msg-group bs)
+    (.add msg-group msg)
     (reset! msg-groups {:grp msg-group :bs bs :msg msg})
+    (reset! geo-groups {:grp geo-group})
     ;; this is for debug
     (reset! debug-msg (p/add-text! "" 0 500))
     ;; TODO: add geo objects to geo-group
     ;; Do initializing
     (go-loop []
+      ;; TODO
+      (swap! geo-groups assoc :hole (p/add-sprite! :hole (/ @p/screen-w 2) (/ @p/screen-h 2)))
+      (.add geo-group (:hole @geo-groups))
       (<! (async/timeout 2000))
       ;; TODO
       (fade-out-msg!))
