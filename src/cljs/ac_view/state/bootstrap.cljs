@@ -9,15 +9,15 @@
 
 
 (defn preload [& _]
+  (p/disable-visibility-change! true)
   ;; Refit screen size
   (p/set-resize-handler!)
   ;; Loading assets
   (asset/load-all-assets!)
+  (asset/register-all-sounds!)
   nil)
 
 (defn create [& _]
-  (p/disable-visibility-change! true)
-  (asset/register-all-sounds!)
   (asset/add-bg!)
   nil)
 
