@@ -20,6 +20,7 @@
   (p/load-spritesheet! :menu-game-ranking "top/menu_game_ranking.png" 103 26)
   (p/load-spritesheet! :menu-game-rule "top/menu_game_rule.png" 68 26)
   (p/load-spritesheet! :menu-game-start "top/menu_game_start.png" 138 26)
+  (p/load-image! :title-logo "top/title.png")
 
   nil)
 

@@ -31,15 +31,15 @@
         ]
     (reset! hole (p/add-sprite! :hole screen-w-half screen-h-half))
 
-    (reset! title-logo (p/add-text! "TITLE LOGO" screen-w-half 200 {:font "32px monospace"}))
+    (reset! title-logo (p/add-sprite! :title-logo screen-w-half 200))
 
     ;; TODO: work
-    (reset! menu-frame (p/add-sprite! :menu-frame screen-w-half 400))
-    (reset! menu-start (p/add-sprite! :menu-game-start 250 400))
-    (reset! menu-rule (p/add-sprite! :menu-game-rule 350 400))
-    (reset! menu-ranking (p/add-sprite! :menu-game-ranking 450 400))
-    (reset! menu-game-off (p/add-sprite! :menu-game-off 550 400))
-    (reset! menu-game-on (p/add-sprite! :menu-game-on 550 450))
+    (reset! menu-frame (p/add-sprite! :menu-frame screen-w-half 500))
+    (reset! menu-start (p/add-sprite! :menu-game-start 250 500))
+    (reset! menu-rule (p/add-sprite! :menu-game-rule 350 500))
+    (reset! menu-ranking (p/add-sprite! :menu-game-ranking 450 500))
+    (reset! menu-game-off (p/add-sprite! :menu-game-off 550 500))
+    (reset! menu-game-on (p/add-sprite! :menu-game-on 550 550))
     nil))
 
 (defn update [& _]
