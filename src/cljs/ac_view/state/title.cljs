@@ -82,16 +82,18 @@
                                (add-button-animation!)))
         ]
     (reset! menu-objs
-            {:hole (p/add-sprite! :hole screen-w-half screen-h-half)
-             :title-logo (p/add-sprite! :title-logo screen-w-half 200)
-             :menu-frame (gen-sprite-button! :menu-frame screen-w-half menu-y)
-             :menu-start (gen-sprite-button! :menu-game-start 230 menu-y)
-             :menu-rule (gen-sprite-button! :menu-game-rule 340 menu-y)
-             :menu-vote (gen-sprite-button! :menu-game-vote 410 menu-y)
-             :menu-ranking (gen-sprite-button! :menu-game-ranking 510 menu-y)
-             :menu-sound-off (gen-sprite-button! :menu-sound-off sound-x menu-y)
-             :menu-sound-on (gen-sprite-button! :menu-sound-on sound-x menu-y)
-             })
+            (into
+              {}
+              [[:hole (p/add-sprite! :hole screen-w-half screen-h-half)]
+               [:title-logo (p/add-sprite! :title-logo screen-w-half 200)]
+               [:menu-frame (gen-sprite-button! :menu-frame screen-w-half menu-y)]
+               [:menu-start (gen-sprite-button! :menu-game-start 230 menu-y)]
+               [:menu-rule (gen-sprite-button! :menu-game-rule 340 menu-y)]
+               [:menu-vote (gen-sprite-button! :menu-game-vote 410 menu-y)]
+               [:menu-ranking (gen-sprite-button! :menu-game-ranking 510 menu-y)]
+               [:menu-sound-off (gen-sprite-button! :menu-sound-off sound-x menu-y)]
+               [:menu-sound-on (gen-sprite-button! :menu-sound-on sound-x menu-y)]
+               ]))
     (if @asset/disable-sound?
       (.kill (:menu-sound-on @menu-objs))
       (.kill (:menu-sound-off @menu-objs)))
