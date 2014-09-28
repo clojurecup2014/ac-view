@@ -235,9 +235,9 @@
         (<! (async/timeout 2000))
         ;; Remove living timeout cats
         (let [now (js/Date.now)]
-          (dotimes [i order]
+          (doseq [i order]
             (let [info (get @status-windows-info i)
-                  latest-status (:latest-status info)
+                  latest-status @(:latest-status info)
                   timestamp (:timestamp latest-status)]
               (when (and
                       (pos? (:life latest-status 0))
@@ -271,7 +271,7 @@
                                              @cat-id->win-idx))]
           (when-not (= order new-win-idx-order)
             (reset! cat-id->win-idx new-cat-id->win-idx)
-            (dotimes [i gcommon/cat-num]
+            (doseq [i order]
               (let [old-idx i
                     new-idx (nth new-win-idx-order i)
                     old-info (get old-status-windows-info old-idx)
