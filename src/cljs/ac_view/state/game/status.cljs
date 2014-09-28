@@ -491,8 +491,8 @@
 
 
 (defn prepare-status-layer-async! []
-  (when debug?
-    (add-test-run-input-handler!))
+  ;(when debug?
+  ;  (add-test-run-input-handler!))
   (go
     (reset! status-windows-info {})
     (reset! cat-sprite-pool {})
