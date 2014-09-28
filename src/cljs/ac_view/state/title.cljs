@@ -125,6 +125,11 @@
     (reset! fader (fader/make!)))
   (fader/fade! @fader 0 1 #(p/start-state! k)))
 
+(defn- go-game! []
+  (when @input/ws-emitter
+    (@input/ws-emitter))
+  (go-state! :game))
+
 (def display-mode (atom nil))
 
 (def rule (atom nil))
@@ -151,7 +156,7 @@
 
 (defn- activate-button! [k]
   (case k
-    :menu-start (go-state! :game)
+    :menu-start (go-game!)
     :menu-rule (show-rule!)
     :menu-member (show-member!)
     :menu-ranking (js/alert "not implemented yet") ; TODO

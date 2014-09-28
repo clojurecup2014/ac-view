@@ -12,7 +12,8 @@
 (defn ^:export call-event! [event]
   (event/enqueue! event))
 
-(defn ^:export bootstrap [target-id & [handle-l handle-r handle-z]]
+(defn ^:export bootstrap
+  [target-id & [handle-l handle-r handle-z handle-listen]]
   (if-not js/window.WebSocket
     (js/alert "Don't support WebSocket to your browser!")
     (let [dom (d/by-id target-id)]
@@ -26,4 +27,6 @@
         (input/set-handler! :R handle-r))
       (when handle-l
         (input/set-handler! :Z handle-z))
+      (when handle-listen
+        (input/set-ws-emitter! handle-listen))
       )))

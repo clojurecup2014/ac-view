@@ -11,6 +11,8 @@
 
 (def key-handlers (atom {}))
 
+(def ws-emitter (atom nil))
+
 
 (defn add-key-capture! []
   (p/add-key-capture! :LEFT :RIGHT :Z))
@@ -48,5 +50,9 @@
 
 (defn set-handler! [k handle]
   (swap! key-handlers assoc k handle))
+
+
+(defn set-ws-emitter! [handle]
+  (reset! ws-emitter handle))
 
 
