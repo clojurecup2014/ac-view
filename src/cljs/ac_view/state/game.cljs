@@ -221,16 +221,17 @@
   nil)
 
 
-
-(def _my-cat-angle (atom 0)) ; DUMMY FOR TEST
-(defn- get-my-cat-angle []
-  @_my-cat-angle)
-
-
 (defn- update-preparation! []
   ;; TODO: display progress of preparation
   nil)
 
+
+
+;(def _my-cat-angle (atom 0)) ; DUMMY FOR TEST
+;(defn- get-my-cat-angle []
+;  @_my-cat-angle)
+;
+;
 ;(defn- update-game! []
 ;  ;; for debug
 ;  (update-debug-msg!
