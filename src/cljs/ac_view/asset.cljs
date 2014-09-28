@@ -74,7 +74,7 @@
   (p/load-spritesheet! :cat6 "game/driftcat6.png" (/ 128 4) (/ 128 4))
   (p/load-spritesheet! :cat7 "game/driftcat7.png" (/ 128 4) (/ 128 4))
   (p/load-spritesheet! :cat8 "game/driftcat8.png" (/ 128 4) (/ 128 4))
-  (p/load-spritesheet! :cat9 "game/driftcat0.png" (/ 128 4) (/ 128 4))
+  (p/load-spritesheet! :cat9 "game/driftcat9.png" (/ 128 4) (/ 128 4))
   (p/load-image! :coin "game/coin.png")
   (p/load-image! :step "game/step.png")
 
