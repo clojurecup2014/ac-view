@@ -55,6 +55,7 @@
   (p/load-image! :rule "rule.jpg")
   (p/load-image! :member "top/member.png")
   (p/load-spritesheet! :menu-game-vote "top/button_vote.png" 124 39)
+  (p/load-spritesheet! :menu-game-tweet "top/button_tweet.png" 124 39)
   (p/load-image! :howto "top/text_howto.png")
 
   ;; sounds
