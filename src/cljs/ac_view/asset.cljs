@@ -53,6 +53,7 @@
 
   ;; sounds
   (register-se! :beep "beep.ogg" "beep.mp3")
+  (register-se! :jump "jump.ogg" "jump.mp3")
 
   ;; game
   (p/load-spritesheet! :numbers "game/number.png" (/ 174 6) (/ 116 4))
