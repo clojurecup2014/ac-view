@@ -144,9 +144,10 @@
         bg (p/add-sprite! :bg x y w h)]
     bg))
 
-(defn play-se! [k]
+(defn play-se! [k & [vol]]
   (when-not @disable-sound?
-    (.play (get @sound-objs k) "" 0 (get-master-vol))))
+    (let [vol (or vol 1)]
+      (.play (get @sound-objs k) "" 0 (* vol (get-master-vol))))))
 
 (defn beep! []
   (play-se! :beep))

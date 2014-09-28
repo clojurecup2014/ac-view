@@ -257,6 +257,12 @@
   ))
 
 
+(defn- emit-jump! [cat my-cat-angle center-x center-y]
+  (let [vol (if (:me cat) 1 0.5)]
+    (asset/play-se! :jump vol))
+  ;; TODO: emit particle
+  nil)
+
 (defn- update-cat! [cat my-cat-angle center-x center-y]
   (let [c (get @cat-assets (:img cat))]
     (update-cat-sprite-position-beta! cat my-cat-angle center-x center-y)
@@ -276,6 +282,11 @@
     ;  :jump false
     ;  :img "cat9"
     ;  }
+    ;(js/console.log (:jump cat))
+    (when (:jump cat)
+      (when-let [prev-frame (gstatus/get-previous-frame-status (:id cat))]
+        (when-not (:jump prev-frame)
+          (emit-jump! cat my-cat-angle center-x center-y))))
     (gstatus/update-status-window! cat)))
 
 

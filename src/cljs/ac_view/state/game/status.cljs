@@ -398,7 +398,6 @@
                                  @(:latest-status
                                     (get old-status-windows-info i)))
                                order)
-              previous-ci->wi @cat-id->win-idx
               new-win-idx-order (sort-win-idx)
               new-cat-id->win-idx (into {}
                                         (map (fn [[k v]]
@@ -540,4 +539,10 @@
 
 
 
+(defn get-previous-frame-status [cat-id]
+  (let [win-idx (@cat-id->win-idx cat-id)
+        info (get @status-windows-info win-idx)
+        latest-status (:latest-status info)]
+    (when latest-status
+      @latest-status)))
 
