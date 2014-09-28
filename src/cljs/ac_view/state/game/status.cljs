@@ -376,7 +376,7 @@
                                       :life 0
                                       :energy 0
                                       :moving nil
-                                      :img nil
+                                      :img ""
                                       :jump nil
                                       :theta 0
                                       :radius 0
@@ -499,7 +499,7 @@
                            :life 0
                            :energy 0
                            :moving nil
-                           :img win-idx
+                           :img (str "cat" win-idx)
                            :jump nil
                            :theta 0
                            :radius 0
@@ -530,12 +530,9 @@
     ;; Notice for prepare
     (swap! gcommon/prepared-set conj :status)))
 
-
-
 (defn get-previous-frame-status [cat-id]
   (let [win-idx (@cat-id->win-idx cat-id)
         info (get @status-windows-info win-idx)
         latest-status (:latest-status info)]
     (when latest-status
       @latest-status)))
-
