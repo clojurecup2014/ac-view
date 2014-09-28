@@ -17,6 +17,7 @@
 (def ^:private ^:const debug? true)
 
 
+;;; TODO: score-text using bitmap font
 
 
 ;;; TODO: move to another module
@@ -33,7 +34,6 @@
 (def ^:private client-timeout-msec (* 5 60 1000))
 
 
-;;; TODO: score-text using bitmap font
 
 
 
@@ -42,6 +42,8 @@
 
 
 (def status-layer (atom nil))
+
+
 
 
 
@@ -232,6 +234,39 @@
 
 
 
+(defn- sort-status-windows! [new-cat-id->win-idx
+                             order
+                             new-win-idx-order
+                             old-status-windows-info
+                             previous-ms]
+  (let [doit! (fn []
+                (reset! cat-id->win-idx new-cat-id->win-idx)
+                (doseq [i order]
+                  (let [old-idx i
+                        new-idx (nth new-win-idx-order i)
+                        old-info (get old-status-windows-info old-idx)
+                        new-m (nth previous-ms new-idx)]
+                    (update-status-window! new-m old-idx))))
+        sp @status-layer
+        tween (-> @p/game .-add (.tween sp))
+        half-msec 200
+        from-point 1
+        middle-point 0
+        to-point 1
+        _ (set! (.-alpha sp) from-point)
+        ;_ (.revive sp)
+        ;; setup t2
+        t2 (-> @p/game .-add (.tween sp))
+        _ (.to t2 (js-obj "alpha" to-point) half-msec)
+        _ (.add (.-onComplete t2) (fn [& _] nil))
+        ;; setup t1
+        t1 (-> @p/game .-add (.tween sp))
+        _ (.to t1 (js-obj "alpha" middle-point) half-msec)
+        _ (.add (.-onComplete t1) (fn [& _]
+                                    (doit!)
+                                    (.start t2)))
+        ]
+    (.start t1)))
 
 
 (def ^:private watcher-is-running? (atom nil))
@@ -240,7 +275,7 @@
     (let [order (range gcommon/cat-num)]
       (reset! watcher-is-running? true)
       (go-loop []
-        (<! (async/timeout 2000))
+        (<! (async/timeout 5000))
         ;; Remove living timeout cats
         (let [now (js/Date.now)]
           (doseq [i order]
@@ -278,13 +313,11 @@
                                                [k (nth new-win-idx-order v)])
                                              @cat-id->win-idx))]
           (when-not (= order new-win-idx-order)
-            (reset! cat-id->win-idx new-cat-id->win-idx)
-            (doseq [i order]
-              (let [old-idx i
-                    new-idx (nth new-win-idx-order i)
-                    old-info (get old-status-windows-info old-idx)
-                    new-m (nth previous-ms new-idx)]
-                (update-status-window! new-m old-idx))))
+            (sort-status-windows! new-cat-id->win-idx
+                                  order
+                                  new-win-idx-order
+                                  old-status-windows-info
+                                  previous-ms))
           (recur))))))
 
 
@@ -378,7 +411,6 @@
                            :radius 0
                            })
      }))
-
 
 
 
