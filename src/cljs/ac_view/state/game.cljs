@@ -269,9 +269,8 @@
         blackhole-x (/ @p/screen-w 2) ; TODO
         blackhole-y (/ @p/screen-h 2) ; TODO: get from my-cat's logical-y
         ;;coins-data (:coins @event/test-queue)
-        ;;blocks-data (:blocks @event/test-queue)
         my-cat @event/my-cat
-       test (.log js/console (:theta my-cat))
+       ;;test (.log js/console (:theta my-cat))
         my-cat-angle (if (> (count my-cat) 0)
                        (:theta my-cat)
                        0)
