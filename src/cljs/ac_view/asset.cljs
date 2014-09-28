@@ -43,10 +43,13 @@
   (p/load-spritesheet! :menu-sound-on "top/menu_game_on.png" 72 26)
   (p/load-spritesheet! :menu-game-ranking "top/menu_game_ranking.png" 103 26)
   (p/load-spritesheet! :menu-game-rule "top/menu_game_rule.png" 68 26)
-  (p/load-spritesheet! :menu-game-vote "top/menu_game_vote.png" 68 26)
+  (p/load-spritesheet! :menu-game-member "top/menu_game_member.png" 92 26)
   (p/load-spritesheet! :menu-game-start "top/menu_game_start.png" 138 26)
   (p/load-image! :title-logo "top/title.png")
   (p/load-image! :rule "rule.jpg")
+  (p/load-image! :member "top/member.png")
+  (p/load-spritesheet! :menu-game-vote "top/button_vote.png" 124 39)
+  (p/load-image! :howto "top/text_howto.png")
 
   ;; sounds
   (register-se! :beep "beep.ogg" "beep.mp3")
