@@ -208,7 +208,7 @@
 
 (def game-over? (atom nil))
 (defn- emit-game-over! [my-cat]
-  ;; TODO: SE
+  (asset/play-se! :se-gameover)
   ;; TODO: Effect
   ;; Setup game-over screen
   (let [bs (p/add-sprite! :1x1 0 0 @p/screen-w @p/screen-h 0 0)]
