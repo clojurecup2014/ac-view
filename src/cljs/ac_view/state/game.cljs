@@ -151,8 +151,11 @@
           (.add @obj-layer sp)
           (.kill sp)
           (swap! cat-assets assoc i info)))
-      ;;(reset! my-cat-id 0) ; TODO: THIS IS FOR TEST!
+      ;; TODO: Wait data from server when not get my-cat-id
       (reset! my-cat-id (js/parseInt (last (:img @event/my-cat))))
+      (when (js/isNaN @my-cat-id)
+        (js/alert "TEST MODE (my-cat-id=0)")
+        (reset! my-cat-id 0))
       (let [sp (:sprite (get @cat-assets @my-cat-id))
             logical-y 300
             ]
@@ -251,10 +254,25 @@
 
 
 (defn- update-cat! [cat my-cat-angle center-x center-y]
-  (let [c  (get @cat-assets (:img cat))]
-    
-    (update-cat-sprite-position-beta! cat  my-cat-angle center-x center-y)
-    ))
+  (let [c (get @cat-assets (:img cat))]
+    (update-cat-sprite-position-beta! cat my-cat-angle center-x center-y)
+    ;(js/alert (pr-str cat))
+    ; {:damaged false
+    ;  :type "cat"
+    ;  :energy 5
+    ;  :theta -20.000
+    ;  :radius 149.99...
+    ;  :life 3
+    ;  :vx 0
+    ;  :vy 0
+    ;  :id "G__4009"
+    ;  :score 0
+    ;  :moving "left"
+    ;  :me true
+    ;  :jump false
+    ;  :img "cat9"
+    ;  }
+    (gstatus/update-status-window! cat)))
 
 
 (defn- update-game-beta! []

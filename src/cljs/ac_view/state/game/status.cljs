@@ -161,9 +161,38 @@
   (get @status-windows-info (determine-win-idx m)))
 
 
+(defn- resolve-server-parameter [m]
+  ;; {:damaged false
+  ;;  :type "cat"
+  ;;  :energy 5
+  ;;  :theta -20.000
+  ;;  :radius 149.99...
+  ;;  :life 3
+  ;;  :vx 0
+  ;;  :vy 0
+  ;;  :id "G__4009"
+  ;;  :score 0
+  ;;  :moving "left"
+  ;;  :me true
+  ;;  :jump false
+  ;;  :img "cat9"
+  ;;  }
+  (let [life (max 0 (min 3 (:life m 0)))
+        energy (max 0 (min 3 (:energy m 0)))
+        timestamp (or (:timestamp m) (js/Date.now))
+        img (let [[_ img-number] (re-find #"^cat(\d+)$" (:img m ""))]
+              (or (js/parseInt img-number) 0))
+        ]
+    (merge m {:life life
+              :energy energy
+              :timestamp timestamp
+              :img img
+              })))
+
 (defn update-status-window! [m & [force-win-idx]]
-  (let [{cat-id :id
-         isme? :isme
+  (let [m (resolve-server-parameter m)
+        {cat-id :id
+         is-me? :me
          score :score
          life :life
          energy :energy
@@ -174,16 +203,13 @@
          radius :radius ; for debug display
          timestamp :timestamp ; for internal use
          } m
-        life (max 0 (min 3 (or life 0)))
-        energy (max 0 (min 3 (or energy 0)))
         info (if force-win-idx
                (get @status-windows-info force-win-idx)
                (determine-window-info m))
         dead? (zero? life)
-        timestamp (or timestamp (js/Date.now))
         tint-color (cond
                      dead? dead-color
-                     isme? player-color
+                     is-me? player-color
                      :else normal-color)]
     ;; kill old cat sprite when changing sprite
     (when force-win-idx
@@ -191,7 +217,7 @@
         (reset! (:cat-sprite info) nil)
         (.kill sp)))
     ;; update :latest-status
-    (reset! (:latest-status info) (assoc m :timestamp timestamp))
+    (reset! (:latest-status info) m)
     ;; tinting (dead / isme / normal)
     (when tint-color
       (set! (.-tint (:frame-sprite info)) tint-color)
