@@ -10,7 +10,7 @@
 ;;; TODO: Separate Audio module
 
 (defn get-master-vol []
-  0.5)
+  0.4)
 
 (def disable-sound? (atom nil))
 (defn enable-sound! []
