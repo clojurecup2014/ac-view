@@ -34,6 +34,9 @@
 (def ^:private client-timeout-msec (* 5 60 1000))
 
 
+(def ^:private x-offset 730)
+(def ^:private y-offset 40)
+(def ^:private y-diff 56)
 
 
 
@@ -53,6 +56,10 @@
 
 
 (def status-windows-info (atom {})) ; {win-idx info-map, ...}
+
+
+
+(def cat-sprite-pool (atom {})) ; {img-num sprite, ...}
 
 
 
@@ -127,19 +134,31 @@
     (set! (.-alpha sp) 0.8)
     (-> @p/game .-add (.tween sp) (.to (js-obj "alpha" 0) 500 nil) (.start))))
 
-(defn- determine-win-idx [cat-id]
-  (if-let [win-idx (@cat-id->win-idx cat-id)]
-    win-idx
-    (let [r (if (< (count @cat-id->win-idx) gcommon/cat-num)
-              (let [win-idx (find-free-win-idx)]
-                (swap! cat-id->win-idx assoc cat-id win-idx)
-                win-idx)
-              (last (sort-win-idx)))]
-      (spawn-sfx! r)
-      r)))
+(defn- determine-win-idx [m]
+  (let [cat-id (:id m)]
+    (if-let [win-idx (@cat-id->win-idx cat-id)]
+      ;; Exist
+      win-idx
+      ;; Not exist
+      (let [i (if (< (count @cat-id->win-idx) gcommon/cat-num)
+                ;; reuse old slot
+                (let [win-idx (find-free-win-idx)]
+                  (swap! cat-id->win-idx assoc cat-id win-idx)
+                  win-idx)
+                ;; use empty slot
+                (last (sort-win-idx)))
+            info (get @status-windows-info i)
+            cat-image-number (:img m)
+            cat-sp (get @cat-sprite-pool cat-image-number)
+            ]
+        (when cat-sp
+          ((:cat-locator info) cat-sp))
+        (reset! (:cat-sprite info) cat-sp)
+        (spawn-sfx! i)
+        i))))
 
-(defn- determine-window-info [cat-id]
-  (get @status-windows-info (determine-win-idx cat-id)))
+(defn- determine-window-info [m]
+  (get @status-windows-info (determine-win-idx m)))
 
 
 (defn update-status-window! [m & [force-win-idx]]
@@ -159,13 +178,18 @@
         energy (max 0 (min 3 (or energy 0)))
         info (if force-win-idx
                (get @status-windows-info force-win-idx)
-               (determine-window-info cat-id))
+               (determine-window-info m))
         dead? (zero? life)
         timestamp (or timestamp (js/Date.now))
         tint-color (cond
                      dead? dead-color
                      isme? player-color
                      :else normal-color)]
+    ;; kill old cat sprite when changing sprite
+    (when force-win-idx
+      (when-let [sp @(:cat-sprite info)]
+        (reset! (:cat-sprite info) nil)
+        (.kill sp)))
     ;; update :latest-status
     (reset! (:latest-status info) (assoc m :timestamp timestamp))
     ;; tinting (dead / isme / normal)
@@ -184,12 +208,39 @@
     (update-life-or-energy! (:heart-sprites info) life)
     ;; apply energy
     (update-life-or-energy! (:energy-sprites info) energy)
+    ;; set new cat sprite when changing sprite
+    (when (and force-win-idx (not dead?))
+      (let [cat-image-number (:img m)
+            cat-sp (get @cat-sprite-pool cat-image-number)]
+        (when cat-sp
+          ((:cat-locator info) cat-sp))
+        (reset! (:cat-sprite info) cat-sp)))
     ;; apply dead or alive
-    (if dead?
-      (.kill (:cat-sprite info))
-      (.revive (:cat-sprite info)))
+    (when-let [cat-sp @(:cat-sprite info)]
+      (if dead?
+        (do
+          (.kill cat-sp)
+          (reset! (:cat-sprite info) nil))
+        (.revive cat-sp)))
     nil))
 
+
+
+(defn- determine-empty-img []
+  (let [used-img (set
+                   (map
+                     (fn [info]
+                       (let [latest-status @(:latest-status info)
+                             img (:img latest-status)
+                             life (:life latest-status 0)]
+                         (when (pos? life)
+                           img)))
+                     (vals @status-windows-info)))]
+  (some (fn [i]
+          (if (used-img i)
+            nil
+            i))
+        (range gcommon/cat-num))))
 
 
 (defn- add-test-run-input-handler! []
@@ -225,7 +276,8 @@
                                   :life (rand-int 4)
                                   :energy (rand-int 4)
                                   :moving nil
-                                  :img nil
+                                  ;:img (rand-int gcommon/cat-num)
+                                  :img (determine-empty-img)
                                   :jump nil
                                   :theta (rand-int 360)
                                   :radius (rand-int 300)
@@ -240,13 +292,26 @@
                              old-status-windows-info
                              previous-ms]
   (let [doit! (fn []
-                (reset! cat-id->win-idx new-cat-id->win-idx)
                 (doseq [i order]
                   (let [old-idx i
                         new-idx (nth new-win-idx-order i)
                         old-info (get old-status-windows-info old-idx)
-                        new-m (nth previous-ms new-idx)]
-                    (update-status-window! new-m old-idx))))
+                        new-m (nth previous-ms new-idx)
+                        ]
+                    ;; update status slot
+                    (update-status-window! new-m old-idx)))
+                (reset! cat-id->win-idx new-cat-id->win-idx)
+                ;; refresh cat sprite life/death
+                (doseq [i order]
+                  (let [info (get @status-windows-info i)
+                        cat-sp @(:cat-sprite info)
+                        latest-status @(:latest-status info)
+                        life (:life latest-status 0)]
+                    (when cat-sp
+                      (if (pos? life)
+                        (.revive cat-sp)
+                          (reset! (:cat-sprite info) nil)
+                          (.kill cat-sp))))))
         sp @status-layer
         tween (-> @p/game .-add (.tween sp))
         half-msec 200
@@ -333,12 +398,18 @@
         _ (set! (.-tint frame-sp) dead-color)
         _ (.add win-group frame-sp)
         ;;
-        cat-sp (gcommon/prepare-cat-sprite! win-idx)
         cat-x (- status-x 24)
-        _ (set! (.-x cat-sp) cat-x)
-        _ (set! (.-y cat-sp) status-y)
-        _ (.add win-group cat-sp)
-        _ (.kill cat-sp)
+        ;cat-sp (gcommon/prepare-cat-sprite! win-idx)
+        ;_ (set! (.-x cat-sp) cat-x)
+        ;_ (set! (.-y cat-sp) status-y)
+        ;_ (.add win-group cat-sp)
+        ;_ (.kill cat-sp)
+        cat-locator (fn [sp]
+                      (when sp
+                        (set! (.-x sp) cat-x)
+                        (set! (.-y sp) status-y)
+                        (.bringToTop sp)
+                        (.revive sp)))
         ;;
         debug-text-x (- status-x 200)
         debug-text (when debug?
@@ -395,7 +466,8 @@
     {:win-idx win-idx
      :group win-group
      :frame-sprite frame-sp
-     :cat-sprite cat-sp
+     :cat-locator cat-locator
+     :cat-sprite (atom nil)
      :debug-text debug-text
      :index-sprite index-sp
      :heart-sprites heart-sps
@@ -407,6 +479,9 @@
                            :score 0
                            :life 0
                            :energy 0
+                           :moving nil
+                           :img win-idx
+                           :jump nil
                            :theta 0
                            :radius 0
                            })
@@ -416,21 +491,25 @@
 
 
 (defn prepare-status-layer-async! []
-  ;(when debug?
-  ;  (add-test-run-input-handler!))
+  (when debug?
+    (add-test-run-input-handler!))
   (go
     (reset! status-windows-info {})
-    (let [x 730
-          y 40
-          y-diff 56]
-      (dotimes [i gcommon/cat-num]
-        (<! (async/timeout 1))
-        (let [win (gen-status-window! x (+ y (* i y-diff)) i)]
-          (swap! status-windows-info assoc i win)))
-      ;; Run watcher
-      (run-watcher!)
-      ;; Notice for prepare
-      (swap! gcommon/prepared-set conj :status))))
+    (reset! cat-sprite-pool {})
+    (dotimes [i gcommon/cat-num]
+      (<! (async/timeout 1))
+      (let [sp (gcommon/prepare-cat-sprite! i)]
+        (.kill sp)
+        (.add @status-layer sp)
+        (swap! cat-sprite-pool assoc i sp)))
+    (dotimes [i gcommon/cat-num]
+      (<! (async/timeout 1))
+      (let [win (gen-status-window! x-offset (+ y-offset (* i y-diff)) i)]
+        (swap! status-windows-info assoc i win)))
+    ;; Run watcher
+    (run-watcher!)
+    ;; Notice for prepare
+    (swap! gcommon/prepared-set conj :status)))
 
 
 
