@@ -73,11 +73,6 @@
 (defn- do-vote! []
   (js/window.open vote-url "_blank"))
 
-(defn- do-tweet! []
-  (let [tweet-url (asset/get-tweet-url (str "This is "
-                                            "test."))]
-    (js/window.open tweet-url "_blank")))
-
 
 (defn create [& _]
   (asset/add-bg!)
@@ -117,12 +112,9 @@
     (input/add-key-capture!)
     (button-select! :menu-start)
 
-    (let [v-x (+ 400 -62 -100)
+    (let [v-x (+ 400 -62)
           v-y 540]
       (-> @p/game .-add (.button v-x v-y "menu-game-vote" do-vote! nil 1 0)))
-    (let [v-x (+ 400 -62 100)
-          v-y 540]
-      (-> @p/game .-add (.button v-x v-y "menu-game-tweet" do-tweet! nil 1 0)))
 
     nil))
 
