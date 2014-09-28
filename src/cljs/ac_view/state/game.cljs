@@ -137,7 +137,7 @@
 (def coin-assets (atom {})) ; {coin-id info-map, ...} ; sprite-info
 (def coins-info (atom {})) ; {coin-id info-map, ...} ; logical-info
 
-(def my-cat-id (atom nil)) ; nil = game isn't live
+(def my-cat-id (atom nil))
 
 (defn add-obj-layer! []
   (reset! obj-layer (-> @p/game .-add .group))
@@ -340,7 +340,7 @@
 
 (defn- update-game-beta! []
   ;; game is alive?
- (when @my-cat-id
+ (when-not @game-over?
     (input/call-pressed-key-handler!))
  (let [
         blackhole-x (:center-x @event/global-map) ; TODO
