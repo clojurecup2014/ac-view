@@ -20,6 +20,12 @@
 ;;; TODO: my status window tinting
 
 
+(def ^:private ^:const debug? true)
+
+
+(def ^:private text-style {:font "10px monospace" :align "left"})
+
+
 
 (def status-layer (atom nil))
 
@@ -43,16 +49,26 @@
         score :score
         life :life
         energy :energy
+        id :id ; for debug display
+        theta :theta ; for debug display
+        radius :radius ; for debug display
         }]
   (let [life (max 0 (min 3 life))
         energy (max 0 (min 3 energy))
         info (get @status-windows-info idx)
         dead? (zero? life)
         ]
+    ;; apply debug-text
+    (when debug?
+      (let [t (str "id=" (or id "?") "\n"
+                   "theta=" (or theta "?") "\n"
+                   "radius=" (or radius "?"))]
+        (set! (.-text (:debug-text info)) t)))
     ;; apply isme
-    ;; TODO
+    (set! (.-tint (:frame-sprite info)) (if isme 0xFFFF00 0xFFFFFF))
+    (if isme nil nil) ; TODO update (:index-sprite info)
     ;; apply score
-    (set! (.-text (:score-text info)) (str score)) ; TODO: change to bitmap
+    (set! (.-text (:score-text info)) (.slice (str "     " score) -6)) ; TODO: change to bitmap
     ;; apply life
     (case life
       0 (do
@@ -114,11 +130,15 @@
                                     :score @score
                                     :life @life
                                     :energy @en
+                                    :id 0
+                                    :theta "???"
+                                    :radius "???"
                                     }))))))
 
 
 (defn prepare-status-layer-async! []
-  (add-test-run-input-handler!) ;; FOR DEBUG
+  (when debug?
+    (add-test-run-input-handler!))
   (go
     (reset! status-windows-info {})
     (let [status-x 730
@@ -138,8 +158,10 @@
               _ (set! (.-x cat-sp) cat-x)
               _ (set! (.-y cat-sp) y)
               _ (.add @status-layer cat-sp)
-              loc-debug-text (p/add-text! "" debug-text-x y)
-              _ (.add @status-layer loc-debug-text)
+              debug-text (when debug?
+                           (p/add-text! "" debug-text-x (- y 20) text-style))
+              _ (when debug?
+                  (.add @status-layer debug-text))
               index-sp (asset/gen-numbers!) ; index number
               _ (set! (.-x index-sp) index-x)
               _ (set! (.-y index-sp) y)
@@ -171,13 +193,13 @@
                              (range 3)))
               _ (<! (async/timeout 1))
               ;; TODO: score-text using bitmap font
-              score-text-x (+ x 0)
+              score-text-x (+ x 10)
               score-text-y (+ y 10)
-              score-text (p/add-text! "0" score-text-x score-text-y {:font "10px monospace"})
+              score-text (p/add-text! "0" score-text-x score-text-y text-style)
               _ (.add @status-layer score-text)
               info {:frame-sprite frame-sp
                     :cat-sprite cat-sp
-                    :loc-debug-text loc-debug-text
+                    :debug-text debug-text
                     :index-sprite index-sp
                     :heart-sprites heart-sps
                     :energy-sprites energy-sps
