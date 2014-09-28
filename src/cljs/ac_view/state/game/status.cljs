@@ -29,6 +29,10 @@
 (def player-color 0xFFFF00)
 (def dead-color 0x7F7F7F)
 
+
+(def ^:private client-timeout-msec (* 5 60 1000))
+
+
 ;;; TODO: score-text using bitmap font
 
 
@@ -134,21 +138,26 @@
          score :score
          life :life
          energy :energy
+         moving :moving
+         img :img
+         jump? :jump
          theta :theta ; for debug display
          radius :radius ; for debug display
+         timestamp :timestamp ; for internal use
          } m
-        life (max 0 (min 3 life))
-        energy (max 0 (min 3 energy))
+        life (max 0 (min 3 (or life 0)))
+        energy (max 0 (min 3 (or energy 0)))
         info (if force-win-idx
                (get @status-windows-info force-win-idx)
                (determine-window-info cat-id))
         dead? (zero? life)
+        timestamp (or timestamp (js/Date.now))
         tint-color (cond
                      dead? dead-color
                      isme? player-color
                      :else normal-color)]
     ;; update :latest-status
-    (reset! (:latest-status info) m)
+    (reset! (:latest-status info) (assoc m :timestamp timestamp))
     ;; tinting (dead / isme / normal)
     (when tint-color
       (set! (.-tint (:frame-sprite info)) tint-color)
@@ -193,6 +202,9 @@
           ;                        :score @score
           ;                        :life @life
           ;                        :energy @en
+          ;                        :moving nil
+          ;                        :img nil
+          ;                        :jump nil
           ;                        :theta "???"
           ;                        :radius "???"
           ;                        })
@@ -202,6 +214,9 @@
                                   :score (rand-int 100)
                                   :life (rand-int 4)
                                   :energy (rand-int 4)
+                                  :moving nil
+                                  :img nil
+                                  :jump nil
                                   :theta (rand-int 360)
                                   :radius (rand-int 300)
                                   })
@@ -211,34 +226,59 @@
 
 
 
-(def ^:private sorter-is-running? (atom nil))
-(defn- run-sorter! []
-  (when-not @sorter-is-running?
-    (reset! sorter-is-running? true)
-    (go-loop []
-      (<! (async/timeout 2000))
-      (let [order (range gcommon/cat-num)
-            old-status-windows-info @status-windows-info
-            ;; NB: It needs for update with sideefects
-            previous-ms (map (fn [i]
-                               @(:latest-status
-                                  (get old-status-windows-info i)))
-                             (range (count old-status-windows-info)))
-            previous-ci->wi @cat-id->win-idx
-            new-win-idx-order (sort-win-idx)
-            new-cat-id->win-idx (into {}
-                                      (map (fn [[k v]]
-                                             [k (nth new-win-idx-order v)])
-                                           @cat-id->win-idx))]
-        (when-not (= order new-win-idx-order)
-          (reset! cat-id->win-idx new-cat-id->win-idx)
-          (dotimes [i (count new-win-idx-order)]
-            (let [old-idx i
-                  new-idx (nth new-win-idx-order i)
-                  old-info (get old-status-windows-info old-idx)
-                  new-m (nth previous-ms new-idx)]
-              (update-status-window! new-m old-idx))))
-        (recur)))))
+(def ^:private watcher-is-running? (atom nil))
+(defn- run-watcher! []
+  (when-not @watcher-is-running?
+    (let [order (range gcommon/cat-num)]
+      (reset! watcher-is-running? true)
+      (go-loop []
+        (<! (async/timeout 2000))
+        ;; Remove living timeout cats
+        (let [now (js/Date.now)]
+          (doseq [i order]
+            (let [info (get @status-windows-info i)
+                  latest-status @(:latest-status info)
+                  timestamp (:timestamp latest-status)]
+              (when (and
+                      (pos? (:life latest-status 0))
+                      (< (+ timestamp client-timeout-msec) now))
+                (let [cleared-status {:id (:id info)
+                                      :isme false
+                                      :score 0
+                                      :life 0
+                                      :energy 0
+                                      :moving nil
+                                      :img nil
+                                      :jump nil
+                                      :theta 0
+                                      :radius 0
+                                      }
+                      cat-id (:id latest-status)]
+                  (update-status-window! cleared-status i)
+                  (swap! cat-id->win-idx dissoc cat-id))))))
+        ;; Sort cats
+        (let [old-status-windows-info @status-windows-info
+              ;; NB: It needs for update with sideefects
+              previous-ms (map (fn [i]
+                                 @(:latest-status
+                                    (get old-status-windows-info i)))
+                               order)
+              previous-ci->wi @cat-id->win-idx
+              new-win-idx-order (sort-win-idx)
+              new-cat-id->win-idx (into {}
+                                        (map (fn [[k v]]
+                                               [k (nth new-win-idx-order v)])
+                                             @cat-id->win-idx))]
+          (when-not (= order new-win-idx-order)
+            (reset! cat-id->win-idx new-cat-id->win-idx)
+            (doseq [i order]
+              (let [old-idx i
+                    new-idx (nth new-win-idx-order i)
+                    old-info (get old-status-windows-info old-idx)
+                    new-m (nth previous-ms new-idx)]
+                (update-status-window! new-m old-idx))))
+          (recur))))))
+
 
 
 
@@ -340,8 +380,8 @@
         (<! (async/timeout 1))
         (let [win (gen-status-window! x (+ y (* i y-diff)) i)]
           (swap! status-windows-info assoc i win)))
-      ;; Run sorter
-      (run-sorter!)
+      ;; Run watcher
+      (run-watcher!)
       ;; Notice for prepare
       (swap! gcommon/prepared-set conj :status))))
 
