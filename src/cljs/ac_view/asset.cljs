@@ -71,6 +71,7 @@
   (p/load-image! :status-frame-me "game/status_frame_me.png")
   (p/load-image! :status-frame-other "game/status_frame_other.png")
   (p/load-spritesheet! :status-item "game/status_item.png" (/ 30 2) (/ 30 2))
+  (p/load-image! :cloud "game/cloud.png")
   ;; filled-heart filled-energy-gauge
   ;; empty-heart  empty-energy-gauge
   (p/load-spritesheet! :cat0 "game/driftcat0.png" (/ 128 4) (/ 128 4))
