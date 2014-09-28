@@ -209,11 +209,12 @@
 
 (defn- update-obj-position!
   [obj angle center-x center-y]
-  (let [x (+ (* (.sin js/Math (* (/ angle 180.0) (.PI js/Math))) (:radius cat)) center-x)]
+  (let [x (+ (* (.sin js/Math (* (/ angle 180.0) (.-PI js/Math))) (:radius cat)) center-x)
+        y (+ (* (.cos js/Math (* (/ angle 180.0) (.-PI js/Math))) (:radius cat) -1) center-y)]
   (set! (.-angle obj) angle)
     (set! (.-x obj) x)
-    (set! (.-y obj) (+ (* (.cos js/Math (* (/ angle 180.0) (.PI js/Math))) (:radius cat) -1) center-y))
-   
+    (set! (.-y obj) y)
+   (.log js/console x)
   ))
 
 (defn- update-coin-sprite-position-beta!
@@ -245,10 +246,9 @@
  (let [
         blackhole-x (/ @p/screen-w 2) ; TODO
         blackhole-y (/ @p/screen-h 2) ; TODO: get from my-cat's logical-y
-        cats-data (first @event/cat-queue)
         ;;coins-data (:coins @event/test-queue)
         ;;blocks-data (:blocks @event/test-queue)
-        my-cat (first (filter #(:ime true) cats-data))
+        my-cat @event/my-cat
         my-cat-angle (if (> (count my-cat) 0)
                        (:theta my-cat)
                        0)
@@ -256,7 +256,7 @@
    (set! (.-x @geo-layer) blackhole-x)
    (set! (.-y @geo-layer) blackhole-y)
    (set! (.-angle @geo-layer) my-cat-angle)
-   (map (fn [c] (update-cat-sprite-position-beta! c  my-cat-angle blackhole-x blackhole-y)) cats-data)
+   (update-cat-sprite-position-beta! @event/cat-queue my-cat-angle blackhole-x blackhole-y)
    ;;(map (fn [c] (update-coin-sprite-position-beta! c  my-cat-angle blackhole-x blackhole-y)) coins-data)
    nil
    )
