@@ -36,7 +36,8 @@
 ;        0xBFBFBF] i 0xFFFFFF))
 
 (defn prepare-cat-sprite! [i]
-  (let [sp (asset/gen-cat! :cat0)
+  (let [k (keyword (str "cat" i))
+        sp (asset/gen-cat! k)
         ;color (get-cat-color i)
         ]
     ;(set! (.-tint sp) color) ; NB: tinting kill animation!

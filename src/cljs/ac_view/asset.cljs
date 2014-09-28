@@ -66,6 +66,15 @@
   ;; 有ハート 有エネルギーゲージ
   ;; 空ハート 有エネルギーゲージ
   (p/load-spritesheet! :cat0 "game/driftcat0.png" (/ 128 4) (/ 128 4))
+  (p/load-spritesheet! :cat1 "game/driftcat1.png" (/ 128 4) (/ 128 4))
+  (p/load-spritesheet! :cat2 "game/driftcat2.png" (/ 128 4) (/ 128 4))
+  (p/load-spritesheet! :cat3 "game/driftcat3.png" (/ 128 4) (/ 128 4))
+  (p/load-spritesheet! :cat4 "game/driftcat4.png" (/ 128 4) (/ 128 4))
+  (p/load-spritesheet! :cat5 "game/driftcat5.png" (/ 128 4) (/ 128 4))
+  (p/load-spritesheet! :cat6 "game/driftcat0.png" (/ 128 4) (/ 128 4))
+  (p/load-spritesheet! :cat7 "game/driftcat0.png" (/ 128 4) (/ 128 4))
+  (p/load-spritesheet! :cat8 "game/driftcat0.png" (/ 128 4) (/ 128 4))
+  (p/load-spritesheet! :cat9 "game/driftcat0.png" (/ 128 4) (/ 128 4))
   (p/load-image! :coin "game/coin.png")
   (p/load-image! :step "game/step.png")
 
