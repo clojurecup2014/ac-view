@@ -6,6 +6,7 @@
             [phaser-cljs.core :as p]
             ))
 
+(def previous-keys-state (atom #{}))
 (def keys-state (atom #{}))
 
 (def key-handlers (atom {}))
@@ -16,6 +17,7 @@
 
 
 (defn update-key-state! []
+  (reset! previous-keys-state @keys-state)
   (reset! keys-state #{})
   (when (p/is-key-down? :LEFT)
     (swap! keys-state conj :L))
