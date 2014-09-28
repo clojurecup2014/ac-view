@@ -209,12 +209,11 @@
 
 (defn- update-obj-position!
   [obj angle center-x center-y]
-  (let [x (+ (* (.sin js/Math (* (/ angle 180.0) (.-PI js/Math))) (:radius cat)) center-x)
-        y (+ (* (.cos js/Math (* (/ angle 180.0) (.-PI js/Math))) (:radius cat) -1) center-y)]
+  (let [x (+ (* (.sin js/Math (* (/ angle 180.0) (.-PI js/Math))) (:radius obj)) center-x)
+        y (+ (* (.cos js/Math (* (/ angle 180.0) (.-PI js/Math))) (:radius obj) -1) center-y)]
   (set! (.-angle obj) angle)
     (set! (.-x obj) x)
     (set! (.-y obj) y)
-   (.log js/console x)
   ))
 
 (defn- update-coin-sprite-position-beta!
