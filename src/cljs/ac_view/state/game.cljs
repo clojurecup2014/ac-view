@@ -316,15 +316,13 @@
 (defn- emit-jump! [cat my-cat-angle center-x center-y]
   (let [vol (if (:me cat) 1 0.5)]
     (asset/play-se! :jump vol))
-  ;; FIXME: Wrong position when not me !!!
   (when true ; (:me cat)
     (let [theta (:theta cat 0)
           radius (:radius cat 0)
           angle (- theta my-cat-angle)
           pe (:pe-jump (@cat-assets (get-cat-id cat)))
-          _ (update-obj-position! pe angle radius center-x center-y)
-          p-x (.-x pe)
-          p-y (.-y pe)
+          p-x (+ (* (.sin js/Math (* (/ angle 180.0) (.-PI js/Math))) (+ radius 10)) center-x)
+          p-y (+ (* (.cos js/Math (* (/ angle 180.0) (.-PI js/Math))) (+ radius 10) -1) center-y)
           ]
       (p/emit-particle! pe p-x p-y pe-lifespan 8)))
   nil)
