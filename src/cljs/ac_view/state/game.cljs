@@ -88,6 +88,8 @@
 (defn prepare-geo-layer-async! []
   (go
     (let [hole (p/add-sprite! :hole 0 0)]
+      (set! (.-width hole) (* 2 (:ground-y @event/global-map)))
+      (set! (.-height hole) (* 2 (:ground-y @event/global-map)))
       (.add @geo-layer hole))
     (<! (async/timeout 50))
     ;; dummy block (TODO)
@@ -238,6 +240,12 @@
      )
   ))
 
+
+
+(defn- update-cat [cat angle center-x center-y]
+  )
+
+
 (defn- update-game-beta! []
   ;; game is alive?
  (when @my-cat-id
@@ -256,7 +264,8 @@
    (set! (.-y @geo-layer) blackhole-y)
    (set! (.-angle @geo-layer) (* my-cat-angle -1))
    (update-cat-sprite-position-beta! my-cat my-cat-angle blackhole-x blackhole-y)
-
+   (doseq [c @event/cat-queue]
+     (update-cat c my-cat-angle blackhole-x blackhole-y))
    ;;(map (fn [c] (update-coin-sprite-position-beta! c  my-cat-angle blackhole-x blackhole-y)) coins-data)
    nil
    )
