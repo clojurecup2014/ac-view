@@ -14,7 +14,7 @@
             [ac-view.state.game.status :as gstatus]
             ))
 
-(def ^:private pe-lifespan 300)
+(def ^:private pe-lifespan 250)
 
 (def timeout-idle-count 50)
 
@@ -280,9 +280,11 @@
     (asset/play-se! :jump vol))
   (let [theta (:theta cat 0)
         radius (:radius cat 0)
+        angle (- theta my-cat-angle)
         pe (:pe-jump (@cat-assets (get-cat-id cat)))
-        p-x center-x
-        p-y (- center-y radius)
+        _ (update-obj-position! pe angle radius center-x center-y)
+        p-x (.-x pe)
+        p-y (.-y pe)
         ]
     (p/emit-particle! pe p-x p-y pe-lifespan 8))
   nil)
