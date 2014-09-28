@@ -242,7 +242,6 @@
               (when (and
                       (pos? (:life latest-status 0))
                       (< (+ timestamp client-timeout-msec) now))
-                (js/alert :timeout-cat-found)
                 (let [cleared-status {:id (:id info)
                                       :isme false
                                       :score 0
@@ -370,8 +369,8 @@
 
 
 (defn prepare-status-layer-async! []
-  (when debug?
-    (add-test-run-input-handler!))
+  ;(when debug?
+  ;  (add-test-run-input-handler!))
   (go
     (reset! status-windows-info {})
     (let [x 730
