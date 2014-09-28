@@ -189,9 +189,9 @@
           ;; TODO: add coins
           (swap! gcommon/prepared-set conj :obj))))))
 
-(defn update-cat-sprite-position! [sp angle logical-y]
-  (-> sp .-anchor (.setTo 0.5 (logical-y->anchor-y gcommon/block-size logical-y)))
-  (set! (.-angle sp) angle))
+;(defn update-cat-sprite-position! [sp angle logical-y]
+;  (-> sp .-anchor (.setTo 0.5 (logical-y->anchor-y gcommon/block-size logical-y)))
+;  (set! (.-angle sp) angle))
 
 
 (defn- do-tweet! [my-cat]
