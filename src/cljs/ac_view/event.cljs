@@ -13,9 +13,9 @@
   (let [e (js->clj (.parse js/JSON event) :keywordize-keys true)]
     (let [t (:type e)]
       (case t
-        "cat" (if (:me e)
-                (reset! my-cat e)
-                (swap! cat-queue #(vec (take 10 (cons e %)))))
+        "cat" (do (swap! cat-queue #(vec (take 10 (cons e %))))
+                  (when (:me e)
+                    (reset! my-cat e)))
         "coin" nil
         "block" nil
         nil))))

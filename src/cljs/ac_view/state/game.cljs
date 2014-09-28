@@ -208,20 +208,20 @@
 
 
 (defn- update-obj-position!
-  [obj angle center-x center-y]
-  (let [x (+ (* (.sin js/Math (* (/ angle 180.0) (.-PI js/Math))) (:radius obj)) center-x)
-        y (+ (* (.cos js/Math (* (/ angle 180.0) (.-PI js/Math))) (:radius obj) -1) center-y)]
+  [obj angle radius center-x center-y]
+  (let [x (+ (* (.sin js/Math (* (/ angle 180.0) (.-PI js/Math))) radius) center-x)
+        y (+ (* (.cos js/Math (* (/ angle 180.0) (.-PI js/Math))) radius -1) center-y)]
   (set! (.-angle obj) angle)
     (set! (.-x obj) x)
     (set! (.-y obj) y)
   ))
 
 (defn- update-coin-sprite-position-beta!
-  [coin my-cat-angle center-x center-y]
+  [coin angle radius  center-x center-y]
   (let [coinsp (:sprite (get @coin-assets @my-cat-id))
-        angle (- (:theta coin) my-cat-angle)]
+        angle (- (:theta coin) angle)]
     (-> coinsp .-anchor (.setTo 0.5 0.5))
-    (update-obj-position! coinsp angle center-x center-y)
+    ;;(update-obj-position! coinsp angle center-x center-y)
   ))
 
 (defn- update-cat-sprite-position-beta!
@@ -229,11 +229,11 @@
   (let [catsp (:sprite (get @cat-assets @my-cat-id))
         angle (- (:theta cat) my-cat-angle)]
     (-> (:sprite (get @cat-assets @my-cat-id)) .-anchor (.setTo 0.5 1.0))
-    (update-obj-position! catsp angle center-x center-y)
+    (update-obj-position! catsp angle (:radius cat) center-x center-y)
     (cond
-     (and (= (:moving cat) :left) (not= (:vx cat)))  (do (.play catsp "walk") (set! (.-width catsp) gcommon/block-size))
-     (and (= (:moving cat) :right) (not= (:vy cat))) (do (set! (.-width catsp) (- gcommon/block-size)) (.play catsp "walk"))
-     (and (= (:moving cat) :stay)) (.play catsp "stay")
+     (and (= (:moving cat) "left") (not= (:vx cat)))  (do (.play catsp "walk") (set! (.-width catsp) gcommon/block-size))
+     (and (= (:moving cat) "right") (not= (:vx cat))) (do (set! (.-width catsp) (- gcommon/block-size)) (.play catsp "walk"))
+     (and (= (:moving cat) "stay")) (.play catsp "stay")
      :else (.play catsp "stay")
      )
   ))
@@ -254,8 +254,9 @@
        ]
    (set! (.-x @geo-layer) blackhole-x)
    (set! (.-y @geo-layer) blackhole-y)
-   (set! (.-angle @geo-layer) my-cat-angle)
-   (update-cat-sprite-position-beta! @event/cat-queue my-cat-angle blackhole-x blackhole-y)
+   (set! (.-angle @geo-layer) (* my-cat-angle -1))
+   (update-cat-sprite-position-beta! my-cat my-cat-angle blackhole-x blackhole-y)
+
    ;;(map (fn [c] (update-coin-sprite-position-beta! c  my-cat-angle blackhole-x blackhole-y)) coins-data)
    nil
    )
