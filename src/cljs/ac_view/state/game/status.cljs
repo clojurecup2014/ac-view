@@ -14,6 +14,11 @@
             ))
 
 
+(def ^:private ^:const debug? true)
+
+
+
+
 ;;; TODO: move to another module
 (defn blink? []
   (zero? (mod (js/Math.floor (js/Date.now) / 1000) 2)))
@@ -24,12 +29,8 @@
 (def player-color 0xFFFF00)
 (def dead-color 0x7F7F7F)
 
-;;; TODO: sort by score (it needs to allow access by id, dont idx)
-
 ;;; TODO: score-text using bitmap font
 
-
-(def ^:private ^:const debug? true)
 
 
 (def ^:private text-style {:font "10px monospace" :align "left"})
@@ -49,7 +50,6 @@
 
 
 
-;;; TODO: Must need GC
 (def cat-id->win-idx (atom {}))
 
 
@@ -81,25 +81,31 @@
   ;; not-empty -> alive -> score -> id-order
   (sort (fn [win-idx-a win-idx-b]
           (let [info-a (get @status-windows-info win-idx-a)
-                info-b (get @status-windows-info win-idx-a)
-                latest-status-a (:latest-status info-a)
-                latest-status-b (:latest-status info-b)]
+                info-b (get @status-windows-info win-idx-b)
+                latest-status-a @(:latest-status info-a)
+                latest-status-b @(:latest-status info-b)]
             (cond
+              ;(and
+              ;  (nil? latest-status-a)
+              ;  (nil? latest-status-b)) 0
+              ;(and
+              ;  (not (nil? latest-status-a))
+              ;  (nil? latest-status-b)) -1
+              ;(and
+              ;  (nil? latest-status-a)
+              ;  (not (nil? latest-status-b))) 1
               (and
-                (nil? latest-status-a)
-                (nil? latest-status-b)) 0
-              (nil? latest-status-a) -1
-              (nil? latest-status-b) 1
+                (pos? (:life latest-status-a))
+                (zero? (:life latest-status-b))) -1
               (and
                 (zero? (:life latest-status-a))
-                (zero? (:life latest-status-b))) 0
-              (zero? (:life latest-status-a)) -1
-              (zero? (:life latest-status-b)) 1
-              (< (:score latest-status-a)
-                 (:score latest-status-b)) -1
+                (pos? (:life latest-status-b))) 1
               (< (:score latest-status-b)
-                 (:score latest-status-a)) 1
-              :else (compare win-idx-b win-idx-a))))))
+                 (:score latest-status-a)) -1
+              (< (:score latest-status-a)
+                 (:score latest-status-b)) 1
+              :else (compare win-idx-a win-idx-b))))
+        (range (count @status-windows-info))))
 
 (defn- find-free-win-idx []
   (let [not-found-in? (fn [vs v]
@@ -122,23 +128,27 @@
   (get @status-windows-info (determine-win-idx cat-id)))
 
 
-(defn update-status-window! [{cat-id :id
-                              isme? :isme
-                              score :score
-                              life :life
-                              energy :energy
-                              theta :theta ; for debug display
-                              radius :radius ; for debug display
-                              }]
-  (let [life (max 0 (min 3 life))
+(defn update-status-window! [m & [force-win-idx]]
+  (let [{cat-id :id
+         isme? :isme
+         score :score
+         life :life
+         energy :energy
+         theta :theta ; for debug display
+         radius :radius ; for debug display
+         } m
+        life (max 0 (min 3 life))
         energy (max 0 (min 3 energy))
-        info (determine-window-info cat-id)
+        info (if force-win-idx
+               (get @status-windows-info force-win-idx)
+               (determine-window-info cat-id))
         dead? (zero? life)
         tint-color (cond
                      dead? dead-color
                      isme? player-color
-                     :else normal-color)
-        ]
+                     :else normal-color)]
+    ;; update :latest-status
+    (reset! (:latest-status info) m)
     ;; tinting (dead / isme / normal)
     (when tint-color
       (set! (.-tint (:frame-sprite info)) tint-color)
@@ -164,26 +174,72 @@
 
 
 (defn- add-test-run-input-handler! []
-  (let [life (atom 3)
-        en (atom 3)
-        score (atom 0)]
+  (let [;life (atom 3)
+        ;en (atom 3)
+        ;score (atom 0)
+        idx (atom 0)
+        ]
     (ac-view.input/set-handler!
       :Z
       (fn []
         (when-not (@ac-view.input/previous-keys-state :Z)
           ;; DUMMY change value
-          (swap! score #(+ 10 %))
-          (if (zero? @en)
-            (swap! life dec)
-            (swap! en dec))
-          (update-status-window! {:id 1
-                                  :isme true
-                                  :score @score
-                                  :life @life
-                                  :energy @en
-                                  :theta "???"
-                                  :radius "???"
-                                  }))))))
+          ;(swap! score #(+ 10 %))
+          ;(if (zero? @en)
+          ;  (swap! life dec)
+          ;  (swap! en dec))
+          ;(update-status-window! {:id 1
+          ;                        :isme true
+          ;                        :score @score
+          ;                        :life @life
+          ;                        :energy @en
+          ;                        :theta "???"
+          ;                        :radius "???"
+          ;                        })
+          (swap! idx inc)
+          (update-status-window! {:id @idx
+                                  :isme (rand-nth [true false])
+                                  :score (rand-int 100)
+                                  :life (rand-int 4)
+                                  :energy (rand-int 4)
+                                  :theta (rand-int 360)
+                                  :radius (rand-int 300)
+                                  })
+          nil)))))
+
+
+
+
+
+(def ^:private sorter-is-running? (atom nil))
+(defn- run-sorter! []
+  (when-not @sorter-is-running?
+    (reset! sorter-is-running? true)
+    (go-loop []
+      (<! (async/timeout 2000))
+      (let [order (range gcommon/cat-num)
+            old-status-windows-info @status-windows-info
+            ;; NB: It needs for update with sideefects
+            previous-ms (map (fn [i]
+                               @(:latest-status
+                                  (get old-status-windows-info i)))
+                             (range (count old-status-windows-info)))
+            previous-ci->wi @cat-id->win-idx
+            new-win-idx-order (sort-win-idx)
+            new-cat-id->win-idx (into {}
+                                      (map (fn [[k v]]
+                                             [k (nth new-win-idx-order v)])
+                                           @cat-id->win-idx))]
+        (when-not (= order new-win-idx-order)
+          (reset! cat-id->win-idx new-cat-id->win-idx)
+          (dotimes [i (count new-win-idx-order)]
+            (let [old-idx i
+                  new-idx (nth new-win-idx-order i)
+                  old-info (get old-status-windows-info old-idx)
+                  new-m (nth previous-ms new-idx)]
+              (update-status-window! new-m old-idx))))
+        (recur)))))
+
 
 
 
@@ -258,7 +314,14 @@
      :heart-sprites heart-sps
      :energy-sprites energy-sps
      :score-text score-text
-     :latest-status (atom nil)
+     :latest-status (atom {:id 0
+                           :isme false
+                           :score 0
+                           :life 0
+                           :energy 0
+                           :theta 0
+                           :radius 0
+                           })
      }))
 
 
@@ -266,8 +329,8 @@
 
 
 (defn prepare-status-layer-async! []
-  (when debug?
-    (add-test-run-input-handler!))
+  ;(when debug?
+  ;  (add-test-run-input-handler!))
   (go
     (reset! status-windows-info {})
     (let [x 730
@@ -277,6 +340,8 @@
         (<! (async/timeout 1))
         (let [win (gen-status-window! x (+ y (* i y-diff)) i)]
           (swap! status-windows-info assoc i win)))
+      ;; Run sorter
+      (run-sorter!)
       ;; Notice for prepare
       (swap! gcommon/prepared-set conj :status))))
 
