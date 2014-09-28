@@ -124,6 +124,13 @@
     (set! (.-alpha sp) 0.8)
     (-> @p/game .-add (.tween sp) (.to (js-obj "alpha" 0) 500 nil) (.start))))
 
+(defn- search-most-obsoleted-win-idx []
+  (first
+    (sort-by #(let [info (get @status-windows-info %)
+                    latest-status @(:latest-status info)]
+                (or (:timestamp latest-status) 0))
+             (range gcommon/cat-num))))
+
 (defn- determine-win-idx [m]
   (let [cat-id (:id m)]
     (if-let [win-idx (@cat-id->win-idx cat-id)]
@@ -131,12 +138,17 @@
       win-idx
       ;; Not exist
       (let [i (if (< (count @cat-id->win-idx) gcommon/cat-num)
-                ;; reuse old slot
+                ;; use empty slot
                 (let [win-idx (find-free-win-idx)]
                   (swap! cat-id->win-idx assoc cat-id win-idx)
                   win-idx)
-                ;; use empty slot
-                (last (sort-win-idx)))
+                ;; reuse old slot
+                (let [candidate (last (sort-win-idx))
+                      candidate-info (get @status-windows-info candidate)
+                      latest-status @(:latest-status candidate-info)]
+                  (if-not (pos? (:life latest-status))
+                    candidate
+                    (search-most-obsoleted-win-idx))))
             info (get @status-windows-info i)
             cat-image-number (:img m)
             cat-sp (get @cat-sprite-pool cat-image-number)
