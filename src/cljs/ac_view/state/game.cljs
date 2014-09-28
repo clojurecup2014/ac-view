@@ -96,19 +96,19 @@
     (<! (async/timeout 50))
     ;; dummy block (TODO)
     
-    ;;(doseq [b @event/global-blocks]
-    ;;  (let [half-theta (/ (* 180 5) (* (.-PI js/Math) (:radius b)))
-    ;;        theta-candidate (filter #(< (+ (* % half-theta) (:start b)) (:end b)) (range 1 20 1))]
-    ;;    (doseq [th theta-candidate]
-    ;;      (add-block-to-geo! (+ (* th half-theta) (:start b)) (:radius b))
-    ;;      )
-    ;;    )
-    ;;  )
+    (doseq [b @event/global-blocks]
+      (let [half-theta (/ (* 180 5) (* (.-PI js/Math) (:radius b)))
+            theta-candidate (filter #(< (+ (* % half-theta) (:start b)) (:end b)) (range 1 20 1))]
+        (doseq [th theta-candidate]
+          (add-block-to-geo! (+ (* th half-theta) (:start b)) (:radius b))
+          )
+        )
+      )
     
     ;;(add-block-to-geo! 0 150)
-    (add-block-to-geo! 30 150)
+    ;;(add-block-to-geo! 30 150)
     ;;(add-block-to-geo! 60 150)
-    (add-block-to-geo! -60 200)
+    ;;(add-block-to-geo! -60 200)
     (swap! gcommon/prepared-set conj :geo)))
 
 
@@ -246,8 +246,8 @@
     (-> (:sprite (get @cat-assets @my-cat-id)) .-anchor (.setTo 0.5 1.0))
     (update-obj-position! catsp angle (:radius cat) center-x center-y)
     (cond
-     (and (= (:moving cat) "left") (> (.abs js/Math (:vx cat)) 0.5))  (do (.play catsp "walk") (set! (.-width catsp) (- gcommon/block-size)))
-     (and (= (:moving cat) "right") (> (.abs js/Math (:vx cat)) 0.5)) (do (set! (.-width catsp) gcommon/block-size) (.play catsp "walk"))
+     (and (= (:moving cat) "left") (> (.abs js/Math (:vx cat)) 0.5))  (do (.play catsp "walk") (set! (.-width catsp) gcommon/block-size))
+     (and (= (:moving cat) "right") (> (.abs js/Math (:vx cat)) 0.5)) (do (set! (.-width catsp) (* gcommon/block-size -1)) (.play catsp "walk"))
      (and (= (:moving cat) "stay")) (.play catsp "stay")
      :else (.play catsp "stay")
      )
@@ -256,9 +256,14 @@
 
 
 
-(defn- update-cat [cat angle center-x center-y]
-  nil
-  )
+;;(defn- update-cat [cat my-cat-angle center-x center-y]
+;;  (let [c  (get @cat-assets (:img cat))]
+;;  (set! (:score c) (:score cat))
+;;  (set! (:energy c) (:energy cat))
+;;  (set! (:energy c) (:life cat))
+;;  (set! (:isme c) (:me cat))
+;;  (update-coin-sprite-position-beta! cat  my-cat-angle blackhole-x blackhole-y)
+;;  )
 
 
 (defn- update-game-beta! []
@@ -269,9 +274,8 @@
         blackhole-x (/ @p/screen-w 2) ; TODO
         blackhole-y (/ @p/screen-h 2) ; TODO: get from my-cat's logical-y
         ;;coins-data (:coins @event/test-queue)
-        ;;blocks-data (:blocks @event/test-queue)
         my-cat @event/my-cat
-       test (.log js/console (pr-str my-cat))
+       ;;test (.log js/console (:theta my-cat))
         my-cat-angle (if (> (count my-cat) 0)
                        (:theta my-cat)
                        0)
