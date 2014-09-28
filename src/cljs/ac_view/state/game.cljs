@@ -146,7 +146,10 @@
 
 (defn- network-error! []
   ;; TODO: Erase loading messages, and other...
-  (js/alert "Network Error")
+  (js/alert "No room for your connection. Please retry later.")
+  (js/setTimeout (fn []
+                (set! (.-location js/window) "/"))
+                5000)
   nil)
 
 (defn prepare-obj-layer-async! []
