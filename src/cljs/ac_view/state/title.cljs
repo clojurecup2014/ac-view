@@ -74,8 +74,8 @@
   (js/window.open vote-url "_blank"))
 
 (defn- do-tweet! []
-  (let [tweet-url (asset/get-tweet-url (str "Let's play astrocats and enjoy it!: "
-                                            "http://astrocats.clojurecup.com #clojurecup #astrocats"))]
+  (let [tweet-url (asset/get-tweet-url (str "Let's play AstroCats! Enjoy it! "
+                                            "http://astrocats.clojurecup.com #clojurecup #AstroCats"))]
     (js/window.open tweet-url "_blank")))
 
 (defn create [& _]
