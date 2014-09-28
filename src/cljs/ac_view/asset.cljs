@@ -67,6 +67,21 @@
   nil)
 
 
+(defn get-numbers-index [number & [altered?]]
+  (if (and (integer? number) (<= 0 number 10))
+    (let [i (nth [0 1 2 3 4 5 12 13 14 15 16] number)]
+      (if altered? (+ i 6) i))
+    17)) ; empty
+
+(defn gen-numbers! []
+  (let [sp (p/add-sprite! :numbers 0 0)]
+    (dotimes [i (* 4 6)]
+      (-> sp .-animations (.add (str i) (array i) 1 false)))
+    sp))
+
+(defn set-numbers! [sp & [number]]
+  (.play sp (get-numbers-index number)))
+
 
 (defn gen-cat! [key-or-idx]
   (let [k (if (keyword? key-or-idx)
@@ -75,9 +90,22 @@
         c (p/add-sprite! k 0 0)]
     (-> c .-animations (.add "stay" (array 0 1 2 3) 2 true))
     (-> c .-animations (.add "walk" (array 4 5 6) 10 true))
+    (-> c .-animations (.add "sitting" (array 8 10) 2 false))
+    (-> c .-animations (.add "sit" (array 10) 1 false))
     (.play c "stay")
     c))
 
+(defn gen-heart! []
+  (let [sp (p/add-sprite! :status-item 0 0)]
+    (-> sp .-animations (.add "on" (array 0) 1 false))
+    (-> sp .-animations (.add "off" (array 2) 1 false))
+    sp))
+
+(defn gen-energy! []
+  (let [sp (p/add-sprite! :status-item 0 0)]
+    (-> sp .-animations (.add "on" (array 1) 1 false))
+    (-> sp .-animations (.add "off" (array 3) 1 false))
+    sp))
 
 
 
