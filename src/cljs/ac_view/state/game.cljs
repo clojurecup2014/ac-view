@@ -197,7 +197,7 @@
 (defn- do-tweet! [my-cat]
   (let [tweet-url (asset/get-tweet-url (str "Your score: "
                                             (:score my-cat)
-                                            " (wip)"))]
+                                            " !! Let's enjoy AstroCats!! :) #astrocats #clojurecup"))]
     (js/window.open tweet-url "_blank")))
 
 
