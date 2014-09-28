@@ -14,6 +14,11 @@
             ))
 
 
+;;; TODO: sort by score (it needs to allow access by id, dont idx)
+
+
+;;; TODO: my status window tinting
+
 
 
 (def status-layer (atom nil))
@@ -28,7 +33,92 @@
 (def status-windows-info (atom {})) ; {status-id info-map, ...}
 
 
+
+
+
+
+
+(defn update-status-window!
+  [idx {isme :isme
+        score :score
+        life :life
+        energy :energy
+        }]
+  (let [life (max 0 (min 3 life))
+        energy (max 0 (min 3 energy))
+        info (get @status-windows-info idx)
+        dead? (zero? life)
+        ]
+    ;; apply isme
+    ;; TODO
+    ;; apply score
+    (set! (.-text (:score-text info)) (str score)) ; TODO: change to bitmap
+    ;; apply life
+    (case life
+      0 (do
+          (.play (nth (:heart-sprites info) 0) "off")
+          (.play (nth (:heart-sprites info) 1) "off")
+          (.play (nth (:heart-sprites info) 2) "off"))
+      1 (do
+          (.play (nth (:heart-sprites info) 0) "on")
+          (.play (nth (:heart-sprites info) 1) "off")
+          (.play (nth (:heart-sprites info) 2) "off"))
+      2 (do
+          (.play (nth (:heart-sprites info) 0) "on")
+          (.play (nth (:heart-sprites info) 1) "on")
+          (.play (nth (:heart-sprites info) 2) "off"))
+      3 (do
+          (.play (nth (:heart-sprites info) 0) "on")
+          (.play (nth (:heart-sprites info) 1) "on")
+          (.play (nth (:heart-sprites info) 2) "on")))
+    ;; apply energy
+    (case energy
+      0 (do
+          (.play (nth (:energy-sprites info) 0) "off")
+          (.play (nth (:energy-sprites info) 1) "off")
+          (.play (nth (:energy-sprites info) 2) "off"))
+      1 (do
+          (.play (nth (:energy-sprites info) 0) "on")
+          (.play (nth (:energy-sprites info) 1) "off")
+          (.play (nth (:energy-sprites info) 2) "off"))
+      2 (do
+          (.play (nth (:energy-sprites info) 0) "on")
+          (.play (nth (:energy-sprites info) 1) "on")
+          (.play (nth (:energy-sprites info) 2) "off"))
+      3 (do
+          (.play (nth (:energy-sprites info) 0) "on")
+          (.play (nth (:energy-sprites info) 1) "on")
+          (.play (nth (:energy-sprites info) 2) "on")))
+    ;; apply dead or alive
+    (if dead?
+      (.kill (:cat-sprite info))
+      (.revive (:cat-sprite info)))
+    nil))
+
+
+
+(defn- add-test-run-input-handler! []
+  (let [life (atom 3)
+        en (atom 3)
+        score (atom 0)]
+    (ac-view.input/set-handler!
+      :Z
+      (fn []
+        (when-not (@ac-view.input/previous-keys-state :Z)
+          ;; DUMMY change value
+          (swap! score #(+ 10 %))
+          (if (zero? @en)
+            (swap! life dec)
+            (swap! en dec))
+          (update-status-window! 0 {:isme true
+                                    :score @score
+                                    :life @life
+                                    :energy @en
+                                    }))))))
+
+
 (defn prepare-status-layer-async! []
+  (add-test-run-input-handler!) ;; FOR DEBUG
   (go
     (reset! status-windows-info {})
     (let [status-x 730
@@ -83,7 +173,7 @@
               ;; TODO: score-text using bitmap font
               score-text-x (+ x 0)
               score-text-y (+ y 10)
-              score-text (p/add-text! "0" score-text-x score-text-y)
+              score-text (p/add-text! "0" score-text-x score-text-y {:font "10px monospace"})
               _ (.add @status-layer score-text)
               info {:frame-sprite frame-sp
                     :cat-sprite cat-sp
@@ -94,22 +184,23 @@
                     :score-text score-text
                     }
               ]
-          ;; TODO: add more status information sprites
-          ;; TODO: set kill/revive sprites
           (swap! status-windows-info assoc i info)))
+      ;; initialize all status
+      (dotimes [i gcommon/cat-num]
+        (update-status-window! i {:isme false
+                                  :score 0
+                                  :life 0
+                                  :energy 0
+                                  }))
+      ;; initialize for me (if needed)
+      ;(update-status-window! 0 {:isme true
+      ;                          :score 0
+      ;                          :life 3
+      ;                          :energy 3
+      ;                          })
+      ;; Notice for prepare
       (swap! gcommon/prepared-set conj :status))))
 
 
-
-
-;;; TODO: my status window tinting
-
-
-
-
-
-(defn update-status-window! [idx & args]
-  ;; TODO
-  nil)
 
 
