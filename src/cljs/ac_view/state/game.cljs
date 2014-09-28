@@ -224,8 +224,8 @@
 
 (defn- update-obj-position!
   [obj angle radius center-x center-y]
-  (let [x (+ (* (.sin js/Math (* (/ angle 180.0) (.-PI js/Math))) radius) center-x)
-        y (+ (* (.cos js/Math (* (/ angle 180.0) (.-PI js/Math))) radius -1) center-y)]
+  (let [x (+ (* (.sin js/Math (* (/ angle 180.0) (.-PI js/Math))) (+ radius 10)) center-x)
+        y (+ (* (.cos js/Math (* (/ angle 180.0) (.-PI js/Math))) (+ radius 10) -1) center-y)]
     (set! (.-angle obj) angle)
     (set! (.-x obj) x)
     (set! (.-y obj) y)
@@ -252,6 +252,7 @@
 
 (defn- update-cat! [cat my-cat-angle center-x center-y]
   (let [c  (get @cat-assets (:img cat))]
+    
     (update-cat-sprite-position-beta! cat  my-cat-angle center-x center-y)
     ))
 

@@ -21,7 +21,7 @@
   (let [e (parse-json event-data)
         t (:type e)]
     (case t
-      "cat" (do (swap! cat-queue #(vec (take 10 (cons e %))))
+      "cat" (do (swap! cat-queue #(vec (take 20 (cons e %))))
                 (when (:me e)
                   (reset! my-cat e)))
       "coin" nil
