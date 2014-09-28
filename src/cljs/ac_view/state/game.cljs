@@ -14,6 +14,14 @@
             [ac-view.state.game.status :as gstatus]
             ))
 
+(def timeout-idle-count 50)
+
+;;; TODO use :id if pssile
+
+(defn get-cat-id
+  [c]
+  (js/parseInt (last (:img c))))
+
 
 ;;; display debug info
 
@@ -95,7 +103,7 @@
       (.add @geo-layer hole))
     (<! (async/timeout 50))
     ;; dummy block (TODO)
-    
+
     (doseq [b @event/global-blocks]
       (let [half-theta (/ (* 180 5) (* (.-PI js/Math) (:radius b)))
             theta-candidate (filter #(< (+ (* % half-theta) (:start b)) (:end b)) (range 1 20 1))]
@@ -104,7 +112,7 @@
           )
         )
       )
-    
+
     ;;(add-block-to-geo! 0 150)
     ;;(add-block-to-geo! 30 150)
     ;;(add-block-to-geo! 60 150)
@@ -120,6 +128,7 @@
 
 (def cat-assets (atom {})) ; {cat-id info-map, ...} ; sprite-info
 (def cats-info (atom {})) ; {cat-id info-map, ...} ; logical-info
+(def cats-idle-count (atom {}))
 (def coin-assets (atom {})) ; {coin-id info-map, ...} ; sprite-info
 (def coins-info (atom {})) ; {coin-id info-map, ...} ; logical-info
 
@@ -157,7 +166,7 @@
           (.kill sp)
           (swap! cat-assets assoc i info)))
       ;; TODO: Wait data from server when not get my-cat-id
-      (reset! my-cat-id (js/parseInt (last (:img @event/my-cat))))
+      (reset! my-cat-id (get-cat-id @event/my-cat))
       ;(reset! my-cat-id 0) ; FOR STANDALONE DEBUG
       (if (js/isNaN @my-cat-id)
         (network-error!)
@@ -170,7 +179,6 @@
           (-> sp .-anchor (.setTo 0.5 (logical-y->anchor-y gcommon/block-size logical-y)))
           ;; TODO: add coins
           (swap! gcommon/prepared-set conj :obj))))))
-
 
 (defn update-cat-sprite-position! [sp angle logical-y]
   (-> sp .-anchor (.setTo 0.5 (logical-y->anchor-y gcommon/block-size logical-y)))
@@ -243,10 +251,12 @@
 
 (defn- update-cat-sprite-position-beta!
   [cat my-cat-angle center-x center-y]
-  (let [catsp (:sprite (get @cat-assets (js/parseInt (last (:img cat)))))
+  (let [catsp (:sprite (get @cat-assets (get-cat-id cat)))
         angle (- (:theta cat) my-cat-angle)]
     (-> catsp .-anchor (.setTo 0.5 1.0))
-    (if (> (:life cat) 0) (.revive catsp) (.kill catsp))
+    (if (> (:life cat) 0)
+      (.revive catsp)
+      (.kill catsp))
     (update-obj-position! catsp angle (:radius cat) center-x center-y)
     (cond
      (and (= (:moving cat) "left") (> (.abs js/Math (:vx cat)) 0.5))  (do (.play catsp "walk") (set! (.-width catsp) gcommon/block-size))
@@ -265,31 +275,12 @@
   nil)
 
 (defn- update-cat! [cat my-cat-angle center-x center-y]
-  (let [c (get @cat-assets (:img cat))]
-    (update-cat-sprite-position-beta! cat my-cat-angle center-x center-y)
-    ;(js/alert (pr-str cat))
-    ; {:damaged false
-    ;  :type "cat"
-    ;  :energy 5
-    ;  :theta -20.000
-    ;  :radius 149.99...
-    ;  :life 3
-    ;  :vx 0
-    ;  :vy 0
-    ;  :id "G__4009"
-    ;  :score 0
-    ;  :moving "left"
-    ;  :me true
-    ;  :jump false
-    ;  :img "cat9"
-    ;  }
-    ;;(js/console.log (if (:jump cat) "!!!!!!!!!!!!" "____"))
-    (when (:jump cat)
-      (when-let [prev-frame (gstatus/get-previous-frame-status (:id cat))]
-        (when-not (:jump prev-frame)
-          (emit-jump! cat my-cat-angle center-x center-y))))
-    (gstatus/update-status-window! cat)))
-
+  (update-cat-sprite-position-beta! cat my-cat-angle center-x center-y)
+  (when (:jump cat)
+    (when-let [prev-frame (gstatus/get-previous-frame-status (:id cat))]
+      (when-not (:jump prev-frame)
+        (emit-jump! cat my-cat-angle center-x center-y))))
+  (gstatus/update-status-window! cat))
 
 (defn- update-game-beta! []
   ;; game is alive?
@@ -304,19 +295,40 @@
         my-cat-angle (if (> (count my-cat) 0)
                        (:theta my-cat)
                        0)
-       exist-cats-num (mapv (fn [c] (js/parseInt (last (:img c)))) @event/cat-queue)
-       ]
-   (reset! my-cat-id (js/parseInt (last (:img my-cat))))
+       ;; exist-cats-num (mapv (fn [c] (get-cat-id c)) @event/cat-queue)
+       other-cat-queue (filter #(not (:me %)) @event/cat-queue)]
+   ;; update my cat
+   (reset! my-cat-id (get-cat-id my-cat))
    (set! (.-x @geo-layer) blackhole-x)
    (set! (.-y @geo-layer) blackhole-y)
    (set! (.-angle @geo-layer) (* my-cat-angle -1))
+   ;; remove old cats
+   (doseq [k (map (fn [c] [(get-cat-id c) (:id c)]) other-cat-queue)]
+     (swap! cats-idle-count assoc k 0))
+   (doseq [k (keys @cats-idle-count)]
+     (swap! cats-idle-count update-in [k] inc))
+   (doseq [[[cindex cid] v] @cats-idle-count]
+     (when (> v timeout-idle-count)
+       (.kill (:sprite (get @cat-assets cindex)))
+       (gstatus/update-status-window! {:id cid
+                                       :me false
+                                       :score 0
+                                       :life 0
+                                       :energy 0
+                                       :moving "left"
+                                       :img (str "cat" cindex)
+                                       :jump false
+                                       :theta 0
+                                       :radius 0
+                                       :timestamp 0})))
+   (swap! cats-idle-count dissoc
+          (keys (filter (fn [[k v]] (> v timeout-idle-count)) @cats-idle-count)))
+   ;; update other cats
    (doseq [c @event/cat-queue]
      (update-cat! c my-cat-angle blackhole-x blackhole-y))
    (event/clear-cat-queue!)
    nil
-   )
- )
-
+   ))
 
 (defn preload [& _]
   (p/disable-visibility-change! true)
