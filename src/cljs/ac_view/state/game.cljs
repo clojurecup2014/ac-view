@@ -81,8 +81,10 @@
   (let [b (p/add-sprite!  :step
                          0 0
                          gcommon/block-size gcommon/block-size
-                         0.5 (logical-y->anchor-y gcommon/block-size logical-y))]
+                         0.5 (+ 1 (/ logical-y 10.0)))]
     (set! (.-angle b) theta)
+    (set! (.-width b) 10)
+    (set! (.-height b) 10)
     (.add @geo-layer b)))
 
 (defn prepare-geo-layer-async! []
@@ -93,10 +95,20 @@
       (.add @geo-layer hole))
     (<! (async/timeout 50))
     ;; dummy block (TODO)
-    (add-block-to-geo! 0 150)
-    (add-block-to-geo! 30 150)
-    (add-block-to-geo! 60 150)
-    (add-block-to-geo! 60 200)
+    
+    (doseq [b @event/global-blocks]
+      (let [half-theta (/ (* 180 5) (* (.-PI js/Math) (:radius b)))
+            theta-candidate (filter #(< (+ (* % half-theta) (:start b)) (:end b)) (range 1 20 1))]
+        (doseq [th theta-candidate]
+          (add-block-to-geo! (+ (* th half-theta) (:start b)) (:radius b))
+          )
+        )
+      )
+    
+    ;;(add-block-to-geo! 0 150)
+    ;;(add-block-to-geo! 30 150)
+    ;;(add-block-to-geo! 60 150)
+    ;;(add-block-to-geo! 60 200)
     (swap! gcommon/prepared-set conj :geo)))
 
 
@@ -213,10 +225,11 @@
   [obj angle radius center-x center-y]
   (let [x (+ (* (.sin js/Math (* (/ angle 180.0) (.-PI js/Math))) radius) center-x)
         y (+ (* (.cos js/Math (* (/ angle 180.0) (.-PI js/Math))) radius -1) center-y)]
-  (set! (.-angle obj) angle)
+    (set! (.-angle obj) angle)
     (set! (.-x obj) x)
     (set! (.-y obj) y)
-  ))
+    nil
+    ))
 
 (defn- update-coin-sprite-position-beta!
   [coin angle radius  center-x center-y]
@@ -238,11 +251,13 @@
      (and (= (:moving cat) "stay")) (.play catsp "stay")
      :else (.play catsp "stay")
      )
+    nil
   ))
 
 
 
 (defn- update-cat [cat angle center-x center-y]
+  nil
   )
 
 
@@ -256,6 +271,7 @@
         ;;coins-data (:coins @event/test-queue)
         ;;blocks-data (:blocks @event/test-queue)
         my-cat @event/my-cat
+       test (.log js/console (pr-str my-cat))
         my-cat-angle (if (> (count my-cat) 0)
                        (:theta my-cat)
                        0)
@@ -264,8 +280,8 @@
    (set! (.-y @geo-layer) blackhole-y)
    (set! (.-angle @geo-layer) (* my-cat-angle -1))
    (update-cat-sprite-position-beta! my-cat my-cat-angle blackhole-x blackhole-y)
-   (doseq [c @event/cat-queue]
-     (update-cat c my-cat-angle blackhole-x blackhole-y))
+   ;;(doseq [c @event/cat-queue]
+   ;;  (update-cat c my-cat-angle blackhole-x blackhole-y))
    ;;(map (fn [c] (update-coin-sprite-position-beta! c  my-cat-angle blackhole-x blackhole-y)) coins-data)
    nil
    )
