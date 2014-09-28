@@ -119,14 +119,22 @@
               checking-win-idx))
           (range gcommon/cat-num))))
 
+(defn- spawn-sfx! [win-idx]
+  (let [sp (:blink-sprite (get @status-windows-info win-idx))]
+    (asset/play-se! :beep)
+    (set! (.-alpha sp) 0.8)
+    (-> @p/game .-add (.tween sp) (.to (js-obj "alpha" 0) 500 nil) (.start))))
+
 (defn- determine-win-idx [cat-id]
   (if-let [win-idx (@cat-id->win-idx cat-id)]
     win-idx
-    (if (< (count @cat-id->win-idx) gcommon/cat-num)
-      (let [win-idx (find-free-win-idx)]
-        (swap! cat-id->win-idx assoc cat-id win-idx)
-        win-idx)
-      (last (sort-win-idx)))))
+    (let [r (if (< (count @cat-id->win-idx) gcommon/cat-num)
+              (let [win-idx (find-free-win-idx)]
+                (swap! cat-id->win-idx assoc cat-id win-idx)
+                win-idx)
+              (last (sort-win-idx)))]
+      (spawn-sfx! r)
+      r)))
 
 (defn- determine-window-info [cat-id]
   (get @status-windows-info (determine-win-idx cat-id)))
@@ -344,6 +352,12 @@
         score-text (p/add-text! "     0" score-text-x score-text-y text-style)
         _ (.add win-group score-text)
         ;;
+        blink-sp (p/add-sprite! :1x1 status-x status-y)
+        _ (set! (.-width blink-sp) (.-width frame-sp))
+        _ (set! (.-height blink-sp) (.-height frame-sp))
+        _ (.add win-group blink-sp)
+        _ (set! (.-alpha blink-sp) 0)
+        ;;
         _ (.add @status-layer win-group)]
     {:win-idx win-idx
      :group win-group
@@ -353,6 +367,7 @@
      :index-sprite index-sp
      :heart-sprites heart-sps
      :energy-sprites energy-sps
+     :blink-sprite blink-sp
      :score-text score-text
      :latest-status (atom {:id 0
                            :isme false
