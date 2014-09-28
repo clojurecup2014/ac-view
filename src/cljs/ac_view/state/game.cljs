@@ -129,6 +129,11 @@
   (reset! obj-layer (-> @p/game .-add .group))
   nil)
 
+(defn- network-error! []
+  ;; TODO: Erase loading messages, and other...
+  (js/alert "Network Error")
+  nil)
+
 (defn prepare-obj-layer-async! []
   (go
     (reset! cat-assets nil)
@@ -153,18 +158,17 @@
           (swap! cat-assets assoc i info)))
       ;; TODO: Wait data from server when not get my-cat-id
       (reset! my-cat-id (js/parseInt (last (:img @event/my-cat))))
-      (when (js/isNaN @my-cat-id)
-        (js/alert "TEST MODE (my-cat-id=0)")
-        (reset! my-cat-id 0))
-      (let [sp (:sprite (get @cat-assets @my-cat-id))
-            logical-y 300
-            ]
-        (.revive sp)
-        (set! (.-x sp) 0)
-        (set! (.-y sp) 0)
-        (-> sp .-anchor (.setTo 0.5 (logical-y->anchor-y gcommon/block-size logical-y)))
-        ;; TODO: add coins
-        (swap! gcommon/prepared-set conj :obj)))))
+      (if (js/isNaN @my-cat-id)
+        (network-error!)
+        (let [sp (:sprite (get @cat-assets @my-cat-id))
+              logical-y 300
+              ]
+          (.revive sp)
+          (set! (.-x sp) 0)
+          (set! (.-y sp) 0)
+          (-> sp .-anchor (.setTo 0.5 (logical-y->anchor-y gcommon/block-size logical-y)))
+          ;; TODO: add coins
+          (swap! gcommon/prepared-set conj :obj))))))
 
 
 (defn update-cat-sprite-position! [sp angle logical-y]
