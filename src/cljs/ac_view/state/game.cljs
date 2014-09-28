@@ -83,8 +83,8 @@
 
 (defn add-geo-layer! []
   (reset! geo-layer (-> @p/game .-add .group))
-  (set! (.-x @geo-layer) (/ @p/screen-w 2))
-  (set! (.-y @geo-layer) (/ @p/screen-h 2))
+  (set! (.-x @geo-layer) (:center-x @event/global-map))
+  (set! (.-y @geo-layer) (:center-y @event/global-map))
   nil)
 
 (defn logical-y->anchor-y [basesize y]
@@ -313,8 +313,8 @@
  (when @my-cat-id
     (input/call-pressed-key-handler!))
  (let [
-        blackhole-x (/ @p/screen-w 2) ; TODO
-        blackhole-y (/ @p/screen-h 2) ; TODO: get from my-cat's logical-y
+        blackhole-x (:center-x @event/global-map) ; TODO
+        blackhole-y (:center-y @event/global-map) ; TODO: get from my-cat's logical-y
         ;;coins-data (:coins @event/test-queue)
         my-cat @event/my-cat
        ;;test (.log js/console (:theta my-cat))
