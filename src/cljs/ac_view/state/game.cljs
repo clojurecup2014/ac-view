@@ -96,19 +96,19 @@
     (<! (async/timeout 50))
     ;; dummy block (TODO)
     
-    ;;(doseq [b @event/global-blocks]
-    ;;  (let [half-theta (/ (* 180 5) (* (.-PI js/Math) (:radius b)))
-    ;;        theta-candidate (filter #(< (+ (* % half-theta) (:start b)) (:end b)) (range 1 20 1))]
-    ;;    (doseq [th theta-candidate]
-    ;;      (add-block-to-geo! (+ (* th half-theta) (:start b)) (:radius b))
-    ;;      )
-    ;;    )
-    ;;  )
+    (doseq [b @event/global-blocks]
+      (let [half-theta (/ (* 180 5) (* (.-PI js/Math) (:radius b)))
+            theta-candidate (filter #(< (+ (* % half-theta) (:start b)) (:end b)) (range 1 20 1))]
+        (doseq [th theta-candidate]
+          (add-block-to-geo! (+ (* th half-theta) (:start b)) (:radius b))
+          )
+        )
+      )
     
     ;;(add-block-to-geo! 0 150)
-    (add-block-to-geo! 30 150)
+    ;;(add-block-to-geo! 30 150)
     ;;(add-block-to-geo! 60 150)
-    (add-block-to-geo! -60 200)
+    ;;(add-block-to-geo! -60 200)
     (swap! gcommon/prepared-set conj :geo)))
 
 
@@ -271,7 +271,7 @@
         ;;coins-data (:coins @event/test-queue)
         ;;blocks-data (:blocks @event/test-queue)
         my-cat @event/my-cat
-       test (.log js/console (pr-str my-cat))
+       test (.log js/console (:theta my-cat))
         my-cat-angle (if (> (count my-cat) 0)
                        (:theta my-cat)
                        0)
