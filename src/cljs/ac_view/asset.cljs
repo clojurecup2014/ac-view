@@ -55,6 +55,7 @@
   (p/load-image! :rule "rule.jpg")
   (p/load-image! :member "top/member.png")
   (p/load-spritesheet! :menu-game-vote "top/button_vote.png" 124 39)
+  (p/load-spritesheet! :menu-game-tweet "top/button_tweet.png" 124 39)
   (p/load-image! :howto "top/text_howto.png")
 
   ;; sounds
@@ -70,6 +71,7 @@
   (p/load-image! :status-frame-me "game/status_frame_me.png")
   (p/load-image! :status-frame-other "game/status_frame_other.png")
   (p/load-spritesheet! :status-item "game/status_item.png" (/ 30 2) (/ 30 2))
+  (p/load-image! :cloud "game/cloud.png")
   ;; filled-heart filled-energy-gauge
   ;; empty-heart  empty-energy-gauge
   (p/load-spritesheet! :cat0 "game/driftcat0.png" (/ 128 4) (/ 128 4))

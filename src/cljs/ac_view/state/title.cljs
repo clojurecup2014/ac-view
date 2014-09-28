@@ -2,6 +2,7 @@
   (:require-macros [ac-view.macros :as m]
                    [cljs.core.async.macros :refer [go go-loop alt!]])
   (:require [crate.core :as c]
+            [crate.util :as cutil]
             [domina :as d]
             [domina.events :as ev]
             [phaser-cljs.core :as p]
@@ -13,6 +14,14 @@
 
 
 (def vote-url "https://clojurecup.com/#/apps/astrocats")
+(def tweet-url
+  (cutil/url
+    "https://twitter.com/intent/tweet"
+    {:source "webclient"
+     :text (str "This is "
+                "test.")
+     }))
+
 
 
 (def hole (atom nil))
@@ -25,8 +34,6 @@
 (def menu-start (atom nil))
 
 (def title-logo (atom nil))
-
-(def vote-button (atom nil))
 
 (def fader (atom nil))
 
@@ -74,6 +81,9 @@
 (defn- do-vote! []
   (js/window.open vote-url "_blank"))
 
+(defn- do-tweet! []
+  (js/window.open tweet-url "_blank"))
+
 
 (defn create [& _]
   (asset/add-bg!)
@@ -113,10 +123,12 @@
     (input/add-key-capture!)
     (button-select! :menu-start)
 
-    (let [v-x (- 400 62)
-          v-y 540
-          v-b (-> @p/game .-add (.button v-x v-y "menu-game-vote" do-vote! nil 1 0))]
-      (reset! vote-button v-b))
+    (let [v-x (+ 400 -62 -100)
+          v-y 540]
+      (-> @p/game .-add (.button v-x v-y "menu-game-vote" do-vote! nil 1 0)))
+    (let [v-x (+ 400 -62 100)
+          v-y 540]
+      (-> @p/game .-add (.button v-x v-y "menu-game-tweet" do-tweet! nil 1 0)))
 
     nil))
 
