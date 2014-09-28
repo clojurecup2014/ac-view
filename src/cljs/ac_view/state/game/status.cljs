@@ -225,8 +225,9 @@
     ;; apply debug-text
     (when debug?
       (let [t (str "id=" (or cat-id "?") "\n"
-                   "theta=" (or theta "?") "\n"
-                   "radius=" (or radius "?"))]
+                   "moving=" moving "\n"
+                   "jump=" jump? "\n"
+                   )]
         (set! (.-text (:debug-text info)) t)))
     ;; apply score
     (set! (.-text (:score-text info)) (.slice (str "     " score) -6))
