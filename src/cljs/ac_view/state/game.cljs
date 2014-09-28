@@ -246,8 +246,8 @@
     (-> (:sprite (get @cat-assets @my-cat-id)) .-anchor (.setTo 0.5 1.0))
     (update-obj-position! catsp angle (:radius cat) center-x center-y)
     (cond
-     (and (= (:moving cat) "left") (> (.abs js/Math (:vx cat)) 0.5))  (do (.play catsp "walk") (set! (.-width catsp) (- gcommon/block-size)))
-     (and (= (:moving cat) "right") (> (.abs js/Math (:vx cat)) 0.5)) (do (set! (.-width catsp) gcommon/block-size) (.play catsp "walk"))
+     (and (= (:moving cat) "left") (> (.abs js/Math (:vx cat)) 0.5))  (do (.play catsp "walk") (set! (.-width catsp) gcommon/block-size))
+     (and (= (:moving cat) "right") (> (.abs js/Math (:vx cat)) 0.5)) (do (set! (.-width catsp) (* gcommon/block-size -1)) (.play catsp "walk"))
      (and (= (:moving cat) "stay")) (.play catsp "stay")
      :else (.play catsp "stay")
      )
@@ -256,9 +256,14 @@
 
 
 
-(defn- update-cat [cat angle center-x center-y]
-  nil
-  )
+;;(defn- update-cat [cat my-cat-angle center-x center-y]
+;;  (let [c  (get @cat-assets (:img cat))]
+;;  (set! (:score c) (:score cat))
+;;  (set! (:energy c) (:energy cat))
+;;  (set! (:energy c) (:life cat))
+;;  (set! (:isme c) (:me cat))
+;;  (update-coin-sprite-position-beta! cat  my-cat-angle blackhole-x blackhole-y)
+;;  )
 
 
 (defn- update-game-beta! []
