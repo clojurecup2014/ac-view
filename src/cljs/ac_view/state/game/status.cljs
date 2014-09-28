@@ -120,7 +120,7 @@
 
 (defn- spawn-sfx! [win-idx]
   (let [sp (:blink-sprite (get @status-windows-info win-idx))]
-    (asset/play-se! :beep)
+    (asset/play-se! :se-spawn)
     (set! (.-alpha sp) 0.8)
     (-> @p/game .-add (.tween sp) (.to (js-obj "alpha" 0) 500 nil) (.start))))
 

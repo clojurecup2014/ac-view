@@ -10,7 +10,7 @@
 ;;; TODO: Separate Audio module
 
 (defn get-master-vol []
-  0.5)
+  0.4)
 
 (def disable-sound? (atom nil))
 (defn enable-sound! []
@@ -62,6 +62,9 @@
   ;; sounds
   (register-se! :beep "beep.ogg" "beep.mp3")
   (register-se! :jump "jump.ogg" "jump.mp3")
+  (register-se! :se-damage "damage.ogg" "damage.mp3")
+  (register-se! :se-spawn "spawn.ogg" "spawn.mp3")
+  (register-se! :se-gameover "gameover.ogg" "gameover.mp3")
 
   ;; game
   (p/load-spritesheet! :numbers "game/number.png" (/ 174 6) (/ 116 4))
