@@ -12,6 +12,9 @@
             ))
 
 
+(def vote-url "https://clojurecup.com/#/apps/astrocats")
+
+
 (def hole (atom nil))
 
 (def menu-frame (atom nil))
@@ -26,17 +29,19 @@
 (def fader (atom nil))
 
 (def menu-keys
-  [:menu-start :menu-rule :menu-ranking :menu-sound-off :menu-sound-on])
+  [:menu-start :menu-rule :menu-vote :menu-ranking :menu-sound-off :menu-sound-on])
 (defn menu-left [k]
   ({:menu-start :menu-start
     :menu-rule :menu-start
-    :menu-ranking :menu-rule
+    :menu-vote :menu-rule
+    :menu-ranking :menu-vote
     :menu-sound-off :menu-ranking
     :menu-sound-on :menu-ranking
     } k))
 (defn menu-right [k]
   ({:menu-start :menu-rule
-    :menu-rule :menu-ranking
+    :menu-rule :menu-vote
+    :menu-vote :menu-ranking
     :menu-ranking (if @asset/disable-sound? :menu-sound-off :menu-sound-on)
     :menu-sound-off :menu-sound-off
     :menu-sound-on :menu-sound-on
@@ -53,8 +58,10 @@
   (reset! atm (apply hash-map kvs)))
 
 (defn- add-button-animation! [obj]
-  (-> obj .-animations (.add "off" (array 0) 1 false))
-  (-> obj .-animations (.add "on" (array 1) 1 false))
+  (try
+    (-> obj .-animations (.add "off" (array 0) 1 false))
+    (-> obj .-animations (.add "on" (array 1) 1 false))
+    (catch :default e nil))
   (.play obj "off"))
 
 (defn- button-select! [k]
@@ -69,7 +76,7 @@
         screen-w-half (/ screen-w 2)
         screen-h-half (/ screen-h 2)
         menu-y 500
-        sound-x 580
+        sound-x 600
         gen-sprite-button! (fn [k x y]
                              (doto (p/add-sprite! k x y)
                                (add-button-animation!)))
@@ -78,9 +85,10 @@
             {:hole (p/add-sprite! :hole screen-w-half screen-h-half)
              :title-logo (p/add-sprite! :title-logo screen-w-half 200)
              :menu-frame (gen-sprite-button! :menu-frame screen-w-half menu-y)
-             :menu-start (gen-sprite-button! :menu-game-start 250 menu-y)
-             :menu-rule (gen-sprite-button! :menu-game-rule 380 menu-y)
-             :menu-ranking (gen-sprite-button! :menu-game-ranking 480 menu-y)
+             :menu-start (gen-sprite-button! :menu-game-start 230 menu-y)
+             :menu-rule (gen-sprite-button! :menu-game-rule 340 menu-y)
+             :menu-vote (gen-sprite-button! :menu-game-vote 410 menu-y)
+             :menu-ranking (gen-sprite-button! :menu-game-ranking 510 menu-y)
              :menu-sound-off (gen-sprite-button! :menu-sound-off sound-x menu-y)
              :menu-sound-on (gen-sprite-button! :menu-sound-on sound-x menu-y)
              })
@@ -88,7 +96,7 @@
       (.kill (:menu-sound-on @menu-objs))
       (.kill (:menu-sound-off @menu-objs)))
 
-    (p/add-text! "KEYBOARD-Z: select, jump" 100 400)
+    (p/add-text! "KEYBOARD-Z: submit, jump" 100 400)
     (p/add-text! "CURSOR-LEFT and RIGHT: move" 400 400)
 
     (input/add-key-capture!)
@@ -114,10 +122,14 @@
   (reset! rule nil)
   nil)
 
+(defn- go-vote! []
+  (js/window.open vote-url "_blank"))
+
 (defn- activate-button! [k]
   (case k
     :menu-start (go-state! :game)
     :menu-rule (show-rule!)
+    :menu-vote (go-vote!)
     :menu-ranking (js/alert "not implemented yet") ; TODO
     :menu-sound-off (do
                       (asset/enable-sound!)
