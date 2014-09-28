@@ -252,9 +252,8 @@
 
 (defn- update-cat! [cat my-cat-angle center-x center-y]
   (let [c  (get @cat-assets (:img cat))]
-    
     (update-cat-sprite-position-beta! cat  my-cat-angle center-x center-y)
-  ))
+    ))
 
 
 (defn- update-game-beta! []
@@ -276,11 +275,8 @@
    (set! (.-x @geo-layer) blackhole-x)
    (set! (.-y @geo-layer) blackhole-y)
    (set! (.-angle @geo-layer) (* my-cat-angle -1))
-   ;;(update-cat-sprite-position-beta! my-cat my-cat-angle blackhole-x blackhole-y)
    (doseq [c @event/cat-queue]
      (update-cat! c my-cat-angle blackhole-x blackhole-y))
-
-   ;;(map (fn [c] (update-coin-sprite-position-beta! c  my-cat-angle blackhole-x blackhole-y)) coins-data)
    nil
    )
  )
