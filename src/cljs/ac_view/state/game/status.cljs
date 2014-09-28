@@ -14,7 +14,7 @@
             ))
 
 
-(def ^:private ^:const debug? true)
+(def ^:private ^:const debug? false)
 
 
 ;;; TODO: score-text using bitmap font
