@@ -76,7 +76,7 @@
         ]
     (reset! menu-objs
             {:hole (p/add-sprite! :hole screen-w-half screen-h-half)
-             :title-logo (gen-sprite-button! :title-logo screen-w-half 200)
+             :title-logo (p/add-sprite! :title-logo screen-w-half 200)
              :menu-frame (gen-sprite-button! :menu-frame screen-w-half menu-y)
              :menu-start (gen-sprite-button! :menu-game-start 250 menu-y)
              :menu-rule (gen-sprite-button! :menu-game-rule 380 menu-y)
@@ -101,10 +101,23 @@
     (reset! fader (fader/make!)))
   (fader/fade! @fader 0 1 #(p/start-state! k)))
 
+(def display-mode (atom nil))
+(def rule (atom nil))
+(defn- show-rule! []
+  (reset! display-mode :rule)
+  (reset! rule (p/add-sprite! :rule 400 300))
+  nil)
+
+(defn- hide-rule! []
+  (reset! display-mode nil)
+  (.destroy @rule)
+  (reset! rule nil)
+  nil)
+
 (defn- activate-button! [k]
   (case k
     :menu-start (go-state! :game)
-    :menu-rule (js/alert "not implemented yet") ; TODO
+    :menu-rule (show-rule!)
     :menu-ranking (js/alert "not implemented yet") ; TODO
     :menu-sound-off (do
                       (asset/enable-sound!)
@@ -121,11 +134,14 @@
 (defn update [& _]
   (when-not (fader/fading? @fader)
     (when-let [k (input/get-just-pressed-key)]
-      (cond
-        (= :Z k) (activate-button! @selected)
-        (= :L k) (button-select! (menu-left @selected))
-        (= :R k) (button-select! (menu-right @selected))
-        )
+      (case @display-mode
+        :rule (hide-rule!)
+        ;; else
+        (cond
+          (= :Z k) (activate-button! @selected)
+          (= :L k) (button-select! (menu-left @selected))
+          (= :R k) (button-select! (menu-right @selected))
+          ))
       (asset/beep!))))
 
 
