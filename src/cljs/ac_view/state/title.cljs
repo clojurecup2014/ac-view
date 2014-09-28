@@ -26,22 +26,24 @@
 
 (def title-logo (atom nil))
 
+(def vote-button (atom nil))
+
 (def fader (atom nil))
 
 (def menu-keys
-  [:menu-start :menu-rule :menu-vote :menu-ranking :menu-sound-off :menu-sound-on])
+  [:menu-start :menu-rule :menu-member :menu-ranking :menu-sound-off :menu-sound-on])
 (defn menu-left [k]
   ({:menu-start :menu-start
     :menu-rule :menu-start
-    :menu-vote :menu-rule
-    :menu-ranking :menu-vote
+    :menu-member :menu-rule
+    :menu-ranking :menu-member
     :menu-sound-off :menu-ranking
     :menu-sound-on :menu-ranking
     } k))
 (defn menu-right [k]
   ({:menu-start :menu-rule
-    :menu-rule :menu-vote
-    :menu-vote :menu-ranking
+    :menu-rule :menu-member
+    :menu-member :menu-ranking
     :menu-ranking (if @asset/disable-sound? :menu-sound-off :menu-sound-on)
     :menu-sound-off :menu-sound-off
     :menu-sound-on :menu-sound-on
@@ -69,28 +71,33 @@
   (.play (get @menu-objs k) "on")
   (reset! selected k))
 
+(defn- do-vote! []
+  (js/window.open vote-url "_blank"))
+
+
 (defn create [& _]
   (asset/add-bg!)
   (let [screen-w @p/screen-w
         screen-h @p/screen-h
         screen-w-half (/ screen-w 2)
         screen-h-half (/ screen-h 2)
-        menu-y 500
-        sound-x 600
+        menu-y 480
+        sound-x 605
         gen-sprite-button! (fn [k x y]
                              (doto (p/add-sprite! k x y)
                                (add-button-animation!)))
+        description-y 380
         ]
     (reset! menu-objs
             (into
               {}
               [[:hole (p/add-sprite! :hole screen-w-half screen-h-half)]
-               [:title-logo (p/add-sprite! :title-logo screen-w-half 200)]
+               [:title-logo (p/add-sprite! :title-logo screen-w-half 180)]
                [:menu-frame (gen-sprite-button! :menu-frame screen-w-half menu-y)]
-               [:menu-start (gen-sprite-button! :menu-game-start 230 menu-y)]
-               [:menu-rule (gen-sprite-button! :menu-game-rule 340 menu-y)]
-               [:menu-vote (gen-sprite-button! :menu-game-vote 410 menu-y)]
-               [:menu-ranking (gen-sprite-button! :menu-game-ranking 510 menu-y)]
+               [:menu-start (gen-sprite-button! :menu-game-start 222 menu-y)]
+               [:menu-rule (gen-sprite-button! :menu-game-rule 330 menu-y)]
+               [:menu-member (gen-sprite-button! :menu-game-member 415 menu-y)]
+               [:menu-ranking (gen-sprite-button! :menu-game-ranking 515 menu-y)]
                [:menu-sound-off (gen-sprite-button! :menu-sound-off sound-x menu-y)]
                [:menu-sound-on (gen-sprite-button! :menu-sound-on sound-x menu-y)]
                ]))
@@ -98,11 +105,18 @@
       (.kill (:menu-sound-on @menu-objs))
       (.kill (:menu-sound-off @menu-objs)))
 
-    (p/add-text! "KEYBOARD-Z: submit, jump" 100 400)
-    (p/add-text! "CURSOR-LEFT and RIGHT: move" 400 400)
+    ;(p/add-text! "KEYBOARD-Z: submit, jump" 150 description-y)
+    ;(p/add-text! "CURSOR-LEFT and RIGHT: move" 450 description-y)
+
+    (p/add-sprite! :howto 400 description-y)
 
     (input/add-key-capture!)
     (button-select! :menu-start)
+
+    (let [v-x (- 400 62)
+          v-y 540
+          v-b (-> @p/game .-add (.button v-x v-y "menu-game-vote" do-vote! nil 1 0))]
+      (reset! vote-button v-b))
 
     nil))
 
@@ -112,26 +126,34 @@
   (fader/fade! @fader 0 1 #(p/start-state! k)))
 
 (def display-mode (atom nil))
+
 (def rule (atom nil))
 (defn- show-rule! []
   (reset! display-mode :rule)
-  (reset! rule (p/add-sprite! :rule 400 300))
+  (reset! rule (p/add-sprite! :rule 400 250))
   nil)
-
 (defn- hide-rule! []
   (reset! display-mode nil)
   (.destroy @rule)
   (reset! rule nil)
   nil)
 
-(defn- go-vote! []
-  (js/window.open vote-url "_blank"))
+(def member (atom nil))
+(defn- show-member! []
+  (reset! display-mode :member)
+  (reset! member (p/add-sprite! :member 400 250))
+  nil)
+(defn- hide-member! []
+  (reset! display-mode nil)
+  (.destroy @member)
+  (reset! member nil)
+  nil)
 
 (defn- activate-button! [k]
   (case k
     :menu-start (go-state! :game)
     :menu-rule (show-rule!)
-    :menu-vote (go-vote!)
+    :menu-member (show-member!)
     :menu-ranking (js/alert "not implemented yet") ; TODO
     :menu-sound-off (do
                       (asset/enable-sound!)
@@ -150,6 +172,7 @@
     (when-let [k (input/get-just-pressed-key)]
       (case @display-mode
         :rule (hide-rule!)
+        :member (hide-member!)
         ;; else
         (cond
           (= :Z k) (activate-button! @selected)
