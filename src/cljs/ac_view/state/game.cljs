@@ -56,8 +56,6 @@
 
 
 
-
-
 ;;; geo info (including blocks)
 
 (def geo-layer (atom nil)) ; (0,0) is blackhole
@@ -151,25 +149,6 @@
         (swap! gcommon/prepared-set conj :obj)))))
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 (defn update-cat-sprite-position! [sp angle logical-y]
   (-> sp .-anchor (.setTo 0.5 (logical-y->anchor-y gcommon/block-size logical-y)))
   (set! (.-angle sp) angle))
@@ -228,14 +207,61 @@
     nil))
 
 
+(defn- update-obj-position!
+  [obj angle center-x center-y]
+  (set! (.-angle obj) angle)
+    (set! (.-x obj) (+ (* (.sin js/Math (* (/ angle 180.0) (.PI js/Math))) (:radius cat)) center-x))
+    (set! (.-y obj) (+ (* (.cos js/Math (* (/ angle 180.0) (.PI js/Math))) (:radius cat) -1) center-x))
+   
+  )
 
+(defn- update-coin-sprite-position-beta!
+  [coin my-cat-angle center-x center-y]
+  (let [coinsp (:sprite (get @coin-assets @my-cat-id))
+        angle (- (:theta coin) my-cat-angle)]
+    (-> coinsp .-anchor (.setTo 0.5 0.5))
+    (update-obj-position! coinsp angle center-x center-y)
+  ))
 
+(defn- update-cat-sprite-position-beta!
+  [cat my-cat-angle center-x center-y]
+  (let [catsp (:sprite (get @cat-assets @my-cat-id))
+        angle (- (:theta cat) my-cat-angle)]
+    (-> (:sprite (get @cat-assets @my-cat-id)) .-anchor (.setTo 0.5 1.0))
+    (update-obj-position! catsp angle center-x center-y)
+    (cond
+     (and (= (:moving cat) :left) (not= (:vx cat)))  (do (.play catsp "walk") (set! (.-width catsp) gcommon/block-size))
+     (and (= (:moving cat) :right) (not= (:vy cat))) (do (set! (.-width catsp) (- gcommon/block-size)) (.play catsp "walk"))
+     (and (= (:moving cat) :stay)) (.play catsp "stay")
+     :else (.play catsp "stay")
+     )
+  ))
 
-
-
-
-
-
+(defn- update-game-beta! []
+  ;; game is alive?
+ (when @my-cat-id
+    (input/call-pressed-key-handler!))
+ (let [
+        blackhole-x (/ @p/screen-w 2) ; TODO
+        blackhole-y (/ @p/screen-h 2) ; TODO: get from my-cat's logical-y
+        cats-data (:cats @event/test-queue)
+        ;;coins-data (:coins @event/test-queue)
+        ;;blocks-data (:blocks @event/test-queue)
+        my-cat (first (filter #(:isme true) cats-data))
+        my-cat-angle (if (> (count my-cat) 0)
+                       (:theta my-cat)
+                       0)
+        ]   
+   (.log js/console  @event/test-queue)
+   (set! (.-x @geo-layer) blackhole-x)
+   (set! (.-y @geo-layer) blackhole-y)
+   (set! (.-angle @geo-layer) my-cat-angle)
+   ;;(set! (.-angle @geo-layer) angle)
+   (map (fn [c] (update-cat-sprite-position-beta! c  my-cat-angle blackhole-x blackhole-y)) cats-data)
+   ;;(map (fn [c] (update-coin-sprite-position-beta! c  my-cat-angle blackhole-x blackhole-y)) coins-data)
+   nil
+   )
+ )
 
 
 (defn preload [& _]
@@ -271,7 +297,7 @@
   ;; TODO: wait info for start from server
   (if @preparing?
     (update-preparation!)
-    (update-game!)))
+    (update-game-beta!)))
 
 
 
