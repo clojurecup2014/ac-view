@@ -45,6 +45,7 @@
   (p/load-spritesheet! :menu-game-rule "top/menu_game_rule.png" 68 26)
   (p/load-spritesheet! :menu-game-start "top/menu_game_start.png" 138 26)
   (p/load-image! :title-logo "top/title.png")
+  (p/load-image! :rule "rule.jpg")
 
   ;; sounds
   (register-se! :beep "beep.ogg" "beep.mp3")
