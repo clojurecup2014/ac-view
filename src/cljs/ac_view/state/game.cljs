@@ -222,6 +222,8 @@
   (let [v-x (+ 400 -62 100)
         v-y 500]
     (-> @p/game .-add (.button v-x v-y "menu-game-tweet" #(do-tweet! my-cat) nil 1 0)))
+  (when-let [sp (:sprite (get @cat-assets @my-cat-id))]
+    (.play sp "sitting"))
   (reset! game-over? true))
 
 (defn- update-game-over! []
