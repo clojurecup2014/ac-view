@@ -1,6 +1,7 @@
 (ns ac-view.asset
   (:require-macros [ac-view.macros :as m])
   (:require [crate.core :as c]
+            [crate.util :as cutil]
             [domina :as d]
             [domina.events :as ev]
             [phaser-cljs.core :as p]
@@ -159,4 +160,15 @@
 
 (defn beep! []
   (play-se! :beep))
+
+
+
+
+
+
+(defn get-tweet-url [text]
+  (cutil/url
+    "https://twitter.com/intent/tweet"
+    {:source "webclient"
+     :text text}))
 

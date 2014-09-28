@@ -14,14 +14,6 @@
 
 
 (def vote-url "https://clojurecup.com/#/apps/astrocats")
-(def tweet-url
-  (cutil/url
-    "https://twitter.com/intent/tweet"
-    {:source "webclient"
-     :text (str "This is "
-                "test.")
-     }))
-
 
 
 (def hole (atom nil))
@@ -82,7 +74,9 @@
   (js/window.open vote-url "_blank"))
 
 (defn- do-tweet! []
-  (js/window.open tweet-url "_blank"))
+  (let [tweet-url (asset/get-tweet-url (str "This is "
+                                            "test."))]
+    (js/window.open tweet-url "_blank")))
 
 
 (defn create [& _]
