@@ -90,6 +90,7 @@
 
   ;; gameover
   (p/load-image! :gameover "gameover/gameover.png")
+  (p/load-spritesheet! :gameover-button-top "gameover/button_top.png" 124 39)
 
   (-> @p/game .-load .start))
 

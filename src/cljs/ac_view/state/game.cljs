@@ -201,6 +201,11 @@
     (js/window.open tweet-url "_blank")))
 
 
+(defn- do-back-top! []
+  ;(fader/fade! (fader/make!) 0 1 #(p/start-state! :title)) ; It cause an error on second play
+  (set! (.-location js/window) "/"))
+
+
 (def game-over? (atom nil))
 (defn- emit-game-over! [my-cat]
   ;; TODO: SE
@@ -211,7 +216,10 @@
     (set! (.-alpha bs) 0.5))
   (p/add-sprite! :gameover 400 200)
   (p/add-text! (str "SCORE: " (:score my-cat)) 350 400 {:font "20px monospace"})
-  (let [v-x (+ 400 -62)
+  (let [v-x (+ 400 -62 -100)
+        v-y 500]
+    (-> @p/game .-add (.button v-x v-y "gameover-button-top" do-back-top! nil 1 0)))
+  (let [v-x (+ 400 -62 100)
         v-y 500]
     (-> @p/game .-add (.button v-x v-y "menu-game-tweet" #(do-tweet! my-cat) nil 1 0)))
   (reset! game-over? true))
