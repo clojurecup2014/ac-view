@@ -90,9 +90,22 @@
         c (p/add-sprite! k 0 0)]
     (-> c .-animations (.add "stay" (array 0 1 2 3) 2 true))
     (-> c .-animations (.add "walk" (array 4 5 6) 10 true))
+    (-> c .-animations (.add "sitting" (array 8 10) 2 false))
+    (-> c .-animations (.add "sit" (array 10) 1 false))
     (.play c "stay")
     c))
 
+(defn gen-heart! []
+  (let [sp (p/add-sprite! :status-item 0 0)]
+    (-> sp .-animations (.add "on" (array 0) 1 false))
+    (-> sp .-animations (.add "off" (array 2) 1 false))
+    sp))
+
+(defn gen-energy! []
+  (let [sp (p/add-sprite! :status-item 0 0)]
+    (-> sp .-animations (.add "on" (array 1) 1 false))
+    (-> sp .-animations (.add "off" (array 3) 1 false))
+    sp))
 
 
 
