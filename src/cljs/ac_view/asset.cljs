@@ -31,11 +31,17 @@
   (apply p/load-audio! k files)
   (swap! sound-keys conj k))
 
-(defn load-all-assets! []
+(defn load-loading-assets! []
   (p/load-image! :bg "bg.jpg")
+  nil)
+
+
+(defn load-all-assets! [load-complete-handle]
+  ;; prepare load handle
+  (-> @p/game .-load .-onLoadComplete (.add load-complete-handle nil))
+
   (p/load-image! :1x1 "1x1.png")
   (p/load-image! :hole "hole.png")
-  ;(p/load-spritesheet! :hoge "hoge.png" frame-w frame-h & [frame-max margin spacing])
 
   ;; title
   (p/load-image! :menu-frame "top/menu_frame.png")
@@ -64,8 +70,8 @@
   (p/load-image! :status-frame-me "game/status_frame_me.png")
   (p/load-image! :status-frame-other "game/status_frame_other.png")
   (p/load-spritesheet! :status-item "game/status_item.png" (/ 30 2) (/ 30 2))
-  ;; 有ハート 有エネルギーゲージ
-  ;; 空ハート 有エネルギーゲージ
+  ;; filled-heart filled-energy-gauge
+  ;; empty-heart  empty-energy-gauge
   (p/load-spritesheet! :cat0 "game/driftcat0.png" (/ 128 4) (/ 128 4))
   (p/load-spritesheet! :cat1 "game/driftcat1.png" (/ 128 4) (/ 128 4))
   (p/load-spritesheet! :cat2 "game/driftcat2.png" (/ 128 4) (/ 128 4))
@@ -79,7 +85,7 @@
   (p/load-image! :coin "game/coin.png")
   (p/load-image! :step "game/step.png")
 
-  nil)
+  (-> @p/game .-load .start))
 
 
 (defn get-numbers-index [number & [altered?]]

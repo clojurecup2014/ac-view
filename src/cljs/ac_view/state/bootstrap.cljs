@@ -13,17 +13,18 @@
   ;; Refit screen size
   (p/set-resize-handler!)
   ;; Loading assets
-  (asset/load-all-assets!)
-  (asset/register-all-sounds!)
+  (asset/load-loading-assets!)
   nil)
 
 (defn create [& _]
   (asset/add-bg!)
-  nil)
+  (p/add-text! "NOW LOADING" 350 300)
+  (asset/load-all-assets!
+    (fn [& _]
+      (asset/register-all-sounds!)
+      (p/start-state! :title))))
 
 (defn update [& _]
-  (p/start-state! :title)
-  ;; TODO
   nil)
 
 (def state-map

@@ -37,7 +37,7 @@
 (defn add-preparation-layer! []
   (reset! preparation-layer (-> @p/game .-add .group))
   (let [bs (p/add-sprite! :1x1  0 0 @p/screen-w @p/screen-h 0 0)
-        msg (p/add-text! "Initializing ..." 300 300)
+        msg (p/add-text! "Initializing ..." 350 300)
         ]
     (set! (.-tint bs) 0)
     (set! (.-alpha bs) 1)
