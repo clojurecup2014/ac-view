@@ -158,6 +158,7 @@
           (swap! cat-assets assoc i info)))
       ;; TODO: Wait data from server when not get my-cat-id
       (reset! my-cat-id (js/parseInt (last (:img @event/my-cat))))
+      ;(reset! my-cat-id 0) ; FOR STANDALONE DEBUG
       (if (js/isNaN @my-cat-id)
         (network-error!)
         (let [sp (:sprite (get @cat-assets @my-cat-id))

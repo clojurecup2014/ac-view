@@ -38,6 +38,9 @@
 (def ^:private y-offset 40)
 (def ^:private y-diff 56)
 
+(def ^:private life-max 3)
+(def ^:private energy-max 5)
+
 
 
 (def ^:private text-style {:font "10px monospace" :align "left"})
@@ -69,24 +72,11 @@
 
 
 
-(defn- update-life-or-energy! [sprites life]
-  (case life
-    0 (do
-        (.play (nth sprites 0) "off")
-        (.play (nth sprites 1) "off")
-        (.play (nth sprites 2) "off"))
-    1 (do
-        (.play (nth sprites 0) "on")
-        (.play (nth sprites 1) "off")
-        (.play (nth sprites 2) "off"))
-    2 (do
-        (.play (nth sprites 0) "on")
-        (.play (nth sprites 1) "on")
-        (.play (nth sprites 2) "off"))
-    3 (do
-        (.play (nth sprites 0) "on")
-        (.play (nth sprites 1) "on")
-        (.play (nth sprites 2) "on"))))
+(defn- update-life-or-energy! [sprites value number]
+  (dotimes [i number]
+    (if (< i value)
+      (.play (nth sprites i) "on")
+      (.play (nth sprites i) "off"))))
 
 
 
@@ -177,11 +167,14 @@
   ;;  :jump false
   ;;  :img "cat9"
   ;;  }
-  (let [life (max 0 (min 3 (:life m 0)))
-        energy (max 0 (min 3 (:energy m 0)))
+  (let [life (max 0 (min life-max (:life m 0)))
+        energy (max 0 (min energy-max (:energy m 0)))
         timestamp (or (:timestamp m) (js/Date.now))
-        img (let [[_ img-number] (re-find #"^cat(\d+)$" (:img m ""))]
-              (or (js/parseInt img-number) 0))
+        img (:img m 0)
+        img (if (number? img)
+              img
+              (let [[_ img-number] (re-find #"^cat(\d+)$" img)]
+                (or (js/parseInt img-number) 0)))
         ]
     (merge m {:life life
               :energy energy
@@ -232,9 +225,9 @@
     ;; apply score
     (set! (.-text (:score-text info)) (.slice (str "     " score) -6))
     ;; apply life
-    (update-life-or-energy! (:heart-sprites info) life)
+    (update-life-or-energy! (:heart-sprites info) life life-max)
     ;; apply energy
-    (update-life-or-energy! (:energy-sprites info) energy)
+    (update-life-or-energy! (:energy-sprites info) energy energy-max)
     ;; set new cat sprite when changing sprite
     (when (and force-win-idx (not dead?))
       (let [cat-image-number (:img m)
@@ -300,8 +293,8 @@
           (update-status-window! {:id @idx
                                   :isme (rand-nth [true false])
                                   :score (rand-int 100)
-                                  :life (rand-int 4)
-                                  :energy (rand-int 4)
+                                  :life (rand-int (inc life-max))
+                                  :energy (rand-int (inc energy-max))
                                   :moving nil
                                   ;:img (rand-int gcommon/cat-num)
                                   :img (determine-empty-img)
@@ -462,20 +455,20 @@
                           (.play sp "off")
                           (.add win-group sp)
                           sp))
-                      (range 3)))
+                      (range life-max)))
         ;;
         energy-sps (doall
                      (map
                        (fn [i]
                          (let [sp (asset/gen-energy!)
-                               item-x (+ status-x 6 (* 14 i))
-                               item-y (+ status-y 1)]
+                               item-x (+ status-x 3 (* 9 i))
+                               item-y (+ status-y 2)]
                            (set! (.-x sp) item-x)
                            (set! (.-y sp) item-y)
                            (.play sp "off")
                            (.add win-group sp)
                            sp))
-                       (range 3)))
+                       (range energy-max)))
         ;;
         score-text-x (+ status-x 10)
         score-text-y (+ status-y 10)
