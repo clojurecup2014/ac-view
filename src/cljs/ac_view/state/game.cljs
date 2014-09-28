@@ -118,10 +118,6 @@
         )
       )
 
-    ;;(add-block-to-geo! 0 150)
-    ;;(add-block-to-geo! 30 150)
-    ;;(add-block-to-geo! 60 150)
-    ;;(add-block-to-geo! -60 200)
     (swap! gcommon/prepared-set conj :geo)))
 
 
@@ -280,13 +276,12 @@
 ;        nil))
 ;    nil))
 
-
 (defn- update-obj-position!
-  [obj angle radius center-x center-y]
+  [obj angle radius center-x center-y me]
   (let [x (+ (* (.sin js/Math (* (/ angle 180.0) (.-PI js/Math))) (+ radius 10)) center-x)
         y (+ (* (.cos js/Math (* (/ angle 180.0) (.-PI js/Math))) (+ radius 10) -1) center-y)]
     (set! (.-angle obj) angle)
-    (set! (.-x obj) x)
+    (set! (.-x obj) (if me center-x x))
     (set! (.-y obj) y)
     nil
     ))
@@ -300,7 +295,7 @@
     (if (> (:life cat) 0)
       (.revive catsp)
       (.kill catsp))
-    (update-obj-position! catsp angle (:radius cat) center-x center-y)
+    (update-obj-position! catsp angle (:radius cat) center-x center-y (:me cat))
     (cond
      (and (= (:moving cat) "left") (> (.abs js/Math (:vx cat)) 0.5))  (do (.play catsp "walk") (set! (.-width catsp) gcommon/block-size))
      (and (= (:moving cat) "right") (> (.abs js/Math (:vx cat)) 0.5)) (do (set! (.-width catsp) (* gcommon/block-size -1)) (.play catsp "walk"))
@@ -320,7 +315,7 @@
           radius (:radius cat 0)
           angle (- theta my-cat-angle)
           pe (:pe-jump (@cat-assets (get-cat-id cat)))
-          _ (update-obj-position! pe angle radius center-x center-y)
+          _ (update-obj-position! pe angle radius center-x center-y (:me cat))
           p-x (.-x pe)
           p-y (.-y pe)
           ]
