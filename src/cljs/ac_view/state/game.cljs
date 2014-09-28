@@ -283,7 +283,7 @@
     ;  :jump false
     ;  :img "cat9"
     ;  }
-    ;(js/console.log (:jump cat))
+    ;;(js/console.log (if (:jump cat) "!!!!!!!!!!!!" "____"))
     (when (:jump cat)
       (when-let [prev-frame (gstatus/get-previous-frame-status (:id cat))]
         (when-not (:jump prev-frame)
@@ -312,6 +312,7 @@
    (set! (.-angle @geo-layer) (* my-cat-angle -1))
    (doseq [c @event/cat-queue]
      (update-cat! c my-cat-angle blackhole-x blackhole-y))
+   (event/clear-cat-queue!)
    nil
    )
  )
