@@ -31,20 +31,20 @@
 (def fader (atom nil))
 
 (def menu-keys
-  [:menu-start :menu-rule :menu-member :menu-ranking :menu-sound-off :menu-sound-on])
+  [:menu-start :menu-rule :menu-member #_:menu-ranking :menu-sound-off :menu-sound-on])
 (defn menu-left [k]
   ({:menu-start :menu-start
     :menu-rule :menu-start
     :menu-member :menu-rule
-    :menu-ranking :menu-member
-    :menu-sound-off :menu-ranking
-    :menu-sound-on :menu-ranking
+    ;:menu-ranking :menu-member
+    :menu-sound-off :menu-member
+    :menu-sound-on :menu-member
     } k))
 (defn menu-right [k]
   ({:menu-start :menu-rule
     :menu-rule :menu-member
-    :menu-member :menu-ranking
-    :menu-ranking (if @asset/disable-sound? :menu-sound-off :menu-sound-on)
+    :menu-member (if @asset/disable-sound? :menu-sound-off :menu-sound-on)
+    ;:menu-ranking (if @asset/disable-sound? :menu-sound-off :menu-sound-on)
     :menu-sound-off :menu-sound-off
     :menu-sound-on :menu-sound-on
     } k))
@@ -82,7 +82,7 @@
         screen-w-half (/ screen-w 2)
         screen-h-half (/ screen-h 2)
         menu-y 480
-        sound-x 605
+        sound-x 580
         gen-sprite-button! (fn [k x y]
                              (doto (p/add-sprite! k x y)
                                (add-button-animation!)))
@@ -94,10 +94,10 @@
               [[:hole (p/add-sprite! :hole screen-w-half screen-h-half)]
                [:title-logo (p/add-sprite! :title-logo screen-w-half 180)]
                [:menu-frame (gen-sprite-button! :menu-frame screen-w-half menu-y)]
-               [:menu-start (gen-sprite-button! :menu-game-start 222 menu-y)]
-               [:menu-rule (gen-sprite-button! :menu-game-rule 330 menu-y)]
-               [:menu-member (gen-sprite-button! :menu-game-member 415 menu-y)]
-               [:menu-ranking (gen-sprite-button! :menu-game-ranking 515 menu-y)]
+               [:menu-start (gen-sprite-button! :menu-game-start 230 menu-y)]
+               [:menu-rule (gen-sprite-button! :menu-game-rule 365 menu-y)]
+               [:menu-member (gen-sprite-button! :menu-game-member 470 menu-y)]
+               ;[:menu-ranking (gen-sprite-button! :menu-game-ranking 515 menu-y)]
                [:menu-sound-off (gen-sprite-button! :menu-sound-off sound-x menu-y)]
                [:menu-sound-on (gen-sprite-button! :menu-sound-on sound-x menu-y)]
                ]))
