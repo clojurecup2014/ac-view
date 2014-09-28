@@ -14,6 +14,8 @@
             [ac-view.state.game.status :as gstatus]
             ))
 
+(def ^:private pe-lifespan 300)
+
 (def timeout-idle-count 50)
 
 ;;; TODO use :id if pssile
@@ -104,7 +106,7 @@
       (set! (.-width hole) (* 2 (:ground-y @event/global-map)))
       (set! (.-height hole) (* 2 (:ground-y @event/global-map)))
       (.add @geo-layer hole))
-    (<! (async/timeout 50))
+    (<! (async/timeout 1))
     ;; dummy block (TODO)
 
     (doseq [b @event/global-blocks]
@@ -141,6 +143,7 @@
   (reset! obj-layer (-> @p/game .-add .group))
   nil)
 
+
 (defn- network-error! []
   ;; TODO: Erase loading messages, and other...
   (js/alert "Network Error")
@@ -151,22 +154,22 @@
     (reset! cat-assets nil)
     (let []
       (dotimes [i gcommon/cat-num]
-        (<! (async/timeout 50))
+        (<! (async/timeout 1))
         (let [sp (gcommon/prepare-cat-sprite! i)
-              ;pe-jump (p/add-particle-emitter! :1x1)
-              ;_ (<! (async/timeout 50))
+              _ (.add @obj-layer sp)
+              _ (.kill sp)
+              _ (<! (async/timeout 1))
+              pe-jump (p/add-particle-emitter! :cloud 100)
+              ;_ (<! (async/timeout 1))
               ;pe-damage (p/add-particle-emitter! :1x1)
-              ;_ (<! (async/timeout 50))
+              ;_ (<! (async/timeout 1))
               ;pe-get (p/add-particle-emitter! :1x1)
-              ;_ (<! (async/timeout 50))
               info {:sprite sp
-                    ;:pe-jump pe-jump
+                    :pe-jump pe-jump
                     ;:pe-damage pe-damage
                     ;:pe-get pe-get
                     }
               ]
-          (.add @obj-layer sp)
-          (.kill sp)
           (swap! cat-assets assoc i info)))
       ;; TODO: Wait data from server when not get my-cat-id
       (reset! my-cat-id (get-cat-id @event/my-cat))
@@ -215,14 +218,12 @@
         ]
     (update-cat-sprite-position!
       (:sprite (get @cat-assets @my-cat-id)) my-cat-angle 200)
-    ;; TODO
     (set! (.-x @geo-layer) blackhole-x)
     (set! (.-y @geo-layer) blackhole-y)
     (set! (.-angle @geo-layer) angle)
     (set! (.-x @obj-layer) blackhole-x)
     (set! (.-y @obj-layer) blackhole-y)
     (set! (.-angle @obj-layer) angle)
-    ;; DUMMY IMPLEMENTATION FOR TEST
     (let [s @input/keys-state]
       (when (and (:L s) (not (:R s)))
         (swap! _my-cat-angle dec)
@@ -274,7 +275,13 @@
 (defn- emit-jump! [cat my-cat-angle center-x center-y]
   (let [vol (if (:me cat) 1 0.5)]
     (asset/play-se! :jump vol))
-  ;; TODO: emit particle
+  (let [theta (:theta cat 0)
+        radius (:radius cat 0)
+        pe (:pe-jump (@cat-assets (get-cat-id cat)))
+        p-x center-x
+        p-y (- center-y radius)
+        ]
+    (p/emit-particle! pe p-x p-y pe-lifespan 8))
   nil)
 
 (defn- update-cat! [cat my-cat-angle center-x center-y]
@@ -284,6 +291,17 @@
       (when-not (:jump prev-frame)
         (emit-jump! cat my-cat-angle center-x center-y))))
   (gstatus/update-status-window! cat))
+
+(defn- update-particles! []
+  (doseq [pe (map :pe-jump (vals @cat-assets))]
+    (when pe
+      (.forEachAlive
+        pe
+        (fn [p]
+          (let [alpha (/ (.-lifespan p) pe-lifespan)
+                alpha (max 0 (min 1 alpha))]
+            ;; TODO: rotate to particles
+            (set! (.-alpha p) alpha)))))))
 
 (defn- update-game-beta! []
   ;; game is alive?
@@ -330,6 +348,8 @@
    (doseq [c @event/cat-queue]
      (update-cat! c my-cat-angle blackhole-x blackhole-y))
    (event/clear-cat-queue!)
+   ;; update particles
+   (update-particles!)
    nil
    ))
 
