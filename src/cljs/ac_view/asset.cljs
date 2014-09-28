@@ -88,6 +88,9 @@
   (p/load-image! :coin "game/coin.png")
   (p/load-image! :step "game/step.png")
 
+  ;; gameover
+  (p/load-image! :gameover "gameover/gameover.png")
+
   (-> @p/game .-load .start))
 
 

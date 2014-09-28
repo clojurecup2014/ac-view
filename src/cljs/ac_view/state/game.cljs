@@ -194,55 +194,83 @@
   (set! (.-angle sp) angle))
 
 
+(defn- do-tweet! [my-cat]
+  (let [tweet-url (asset/get-tweet-url (str "Your score: "
+                                            (:score my-cat)
+                                            " (wip)"))]
+    (js/window.open tweet-url "_blank")))
 
-(def _my-cat-angle (atom 0)) ; DUMMY FOR TEST
-(defn- get-my-cat-angle []
-  @_my-cat-angle)
+
+(def game-over? (atom nil))
+(defn- emit-game-over! [my-cat]
+  ;; TODO: SE
+  ;; TODO: Effect
+  ;; Setup game-over screen
+  (let [bs (p/add-sprite! :1x1 0 0 @p/screen-w @p/screen-h 0 0)]
+    (set! (.-tint bs) 0)
+    (set! (.-alpha bs) 0.5))
+  (p/add-sprite! :gameover 400 200)
+  (p/add-text! (str "SCORE: " (:score my-cat)) 350 400 {:font "20px monospace"})
+  (let [v-x (+ 400 -62)
+        v-y 500]
+    (-> @p/game .-add (.button v-x v-y "menu-game-tweet" #(do-tweet! my-cat) nil 1 0)))
+  (reset! game-over? true))
+
+(defn- update-game-over! []
+  ;; TODO
+  nil)
 
 
 (defn- update-preparation! []
   ;; TODO: display progress of preparation
   nil)
 
-(defn- update-game! []
-  ;; for debug
-  (update-debug-msg!
-    (str " INPUT-DEBUG: " @input/keys-state "\n"
-         " RECEIVED-EV: " (pr-str (first @event/cat-queue))
-         ))
-  ;; game is alive?
-  (when @my-cat-id
-    (input/call-pressed-key-handler!))
-  ;; update all
-  (let [blackhole-x (/ @p/screen-w 2) ; TODO
-        blackhole-y (/ @p/screen-h 2) ; TODO: get from my-cat's logical-y
-        my-cat-angle (get-my-cat-angle)
-        angle (- my-cat-angle)
-        ]
-    (update-cat-sprite-position!
-      (:sprite (get @cat-assets @my-cat-id)) my-cat-angle 200)
-    (set! (.-x @geo-layer) blackhole-x)
-    (set! (.-y @geo-layer) blackhole-y)
-    (set! (.-angle @geo-layer) angle)
-    (set! (.-x @obj-layer) blackhole-x)
-    (set! (.-y @obj-layer) blackhole-y)
-    (set! (.-angle @obj-layer) angle)
-    (let [s @input/keys-state]
-      (when (and (:L s) (not (:R s)))
-        (swap! _my-cat-angle dec)
-        (.play (:sprite (get @cat-assets @my-cat-id)) "walk")
-        (set! (.-width (:sprite (get @cat-assets @my-cat-id))) gcommon/block-size)
-        nil)
-      (when (and (:R s) (not (:L s)))
-        (swap! _my-cat-angle inc)
-        (set! (.-width (:sprite (get @cat-assets @my-cat-id))) (- gcommon/block-size))
-        (.play (:sprite (get @cat-assets @my-cat-id)) "walk")
-        nil)
-      (when (and (not (:R s)) (not (:L s)))
-        (.play (:sprite (get @cat-assets @my-cat-id)) "stay"))
-      (when (:Z s)
-        nil))
-    nil))
+
+
+;(def _my-cat-angle (atom 0)) ; DUMMY FOR TEST
+;(defn- get-my-cat-angle []
+;  @_my-cat-angle)
+;
+;
+;(defn- update-game! []
+;  ;; for debug
+;  (update-debug-msg!
+;    (str " INPUT-DEBUG: " @input/keys-state "\n"
+;         " RECEIVED-EV: " (pr-str (first @event/cat-queue))
+;         ))
+;  ;; game is alive?
+;  (when @my-cat-id
+;    (input/call-pressed-key-handler!))
+;  ;; update all
+;  (let [blackhole-x (/ @p/screen-w 2) ; TODO
+;        blackhole-y (/ @p/screen-h 2) ; TODO: get from my-cat's logical-y
+;        my-cat-angle (get-my-cat-angle)
+;        angle (- my-cat-angle)
+;        ]
+;    (update-cat-sprite-position!
+;      (:sprite (get @cat-assets @my-cat-id)) my-cat-angle 200)
+;    (set! (.-x @geo-layer) blackhole-x)
+;    (set! (.-y @geo-layer) blackhole-y)
+;    (set! (.-angle @geo-layer) angle)
+;    (set! (.-x @obj-layer) blackhole-x)
+;    (set! (.-y @obj-layer) blackhole-y)
+;    (set! (.-angle @obj-layer) angle)
+;    (let [s @input/keys-state]
+;      (when (and (:L s) (not (:R s)))
+;        (swap! _my-cat-angle dec)
+;        (.play (:sprite (get @cat-assets @my-cat-id)) "walk")
+;        (set! (.-width (:sprite (get @cat-assets @my-cat-id))) gcommon/block-size)
+;        nil)
+;      (when (and (:R s) (not (:L s)))
+;        (swap! _my-cat-angle inc)
+;        (set! (.-width (:sprite (get @cat-assets @my-cat-id))) (- gcommon/block-size))
+;        (.play (:sprite (get @cat-assets @my-cat-id)) "walk")
+;        nil)
+;      (when (and (not (:R s)) (not (:L s)))
+;        (.play (:sprite (get @cat-assets @my-cat-id)) "stay"))
+;      (when (:Z s)
+;        nil))
+;    nil))
 
 
 (defn- update-obj-position!
@@ -278,15 +306,17 @@
 (defn- emit-jump! [cat my-cat-angle center-x center-y]
   (let [vol (if (:me cat) 1 0.5)]
     (asset/play-se! :jump vol))
-  (let [theta (:theta cat 0)
-        radius (:radius cat 0)
-        angle (- theta my-cat-angle)
-        pe (:pe-jump (@cat-assets (get-cat-id cat)))
-        _ (update-obj-position! pe angle radius center-x center-y)
-        p-x (.-x pe)
-        p-y (.-y pe)
-        ]
-    (p/emit-particle! pe p-x p-y pe-lifespan 8))
+  ;; FIXME: Wrong position when not me !!!
+  (when true ; (:me cat)
+    (let [theta (:theta cat 0)
+          radius (:radius cat 0)
+          angle (- theta my-cat-angle)
+          pe (:pe-jump (@cat-assets (get-cat-id cat)))
+          _ (update-obj-position! pe angle radius center-x center-y)
+          p-x (.-x pe)
+          p-y (.-y pe)
+          ]
+      (p/emit-particle! pe p-x p-y pe-lifespan 8)))
   nil)
 
 (defn- update-cat! [cat my-cat-angle center-x center-y]
@@ -355,6 +385,9 @@
    (event/clear-cat-queue!)
    ;; update particles
    (update-particles!)
+   ;; check game-over
+   (when-not (pos? (:life my-cat))
+     (emit-game-over! my-cat))
    nil
    ))
 
@@ -388,10 +421,10 @@
 
 
 (defn update [& _]
-  ;; TODO: wait info for start from server
-  (if @preparing?
-    (update-preparation!)
-    (update-game-beta!)))
+  (cond
+    @preparing? (update-preparation!)
+    @game-over? (update-game-over!)
+    :else (update-game-beta!)))
 
 
 
