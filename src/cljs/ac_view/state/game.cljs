@@ -46,9 +46,12 @@
     nil))
 
 (defn fadeout-preparation-layer! [handle]
-  ;; TODO: fade-out
-  (set! (.-visible @preparation-layer) false)
-  (handle))
+  (let [t (-> @p/game .-add (.tween @preparation-layer))]
+    (.to t (js-obj "y" -600) 250)
+    (.add (.-onComplete t) (fn [& _]
+                             (set! (.-visible @preparation-layer) false)
+                             (handle)))
+    (.start t)))
 
 (defn prepare-is-all-done? []
   (<= 3 (count @gcommon/prepared-set)))
@@ -243,7 +246,7 @@
 
 (defn- update-cat-sprite-position-beta!
   [cat my-cat-angle center-x center-y]
-  (let [catsp (:sprite (get @cat-assets (js/parseInt (last (:img cat)))))
+  (let [catsp (:sprite (get @cat-assets (js/parseInt (last (:img cat)) 10)))
         angle (- (:theta cat) my-cat-angle)]
     (-> catsp .-anchor (.setTo 0.5 1.0))
     (if (> (:life cat) 0) (.revive catsp) (.kill catsp))

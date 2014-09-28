@@ -171,10 +171,11 @@
         energy (max 0 (min energy-max (:energy m 0)))
         timestamp (or (:timestamp m) (js/Date.now))
         img (:img m 0)
-        img (if (number? img)
-              img
-              (let [[_ img-number] (re-find #"^cat(\d+)$" img)]
-                (or (js/parseInt img-number) 0)))
+        img (cond
+              (number? img) img
+              (string? img) (let [[_ img-number] (re-find #"^cat(\d+)$" img)]
+                              (or (js/parseInt img-number 10) 0))
+              :else 0)
         ]
     (merge m {:life life
               :energy energy
@@ -333,7 +334,6 @@
                           (reset! (:cat-sprite info) nil)
                           (.kill cat-sp))))))
         sp @status-layer
-        tween (-> @p/game .-add (.tween sp))
         half-msec 200
         from-point 1
         middle-point 0
